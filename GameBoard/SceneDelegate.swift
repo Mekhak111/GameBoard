@@ -17,7 +17,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
   ) {
     guard let scene = scene as? UIWindowScene else { return }
     
-    let viewController = BowlingViewController() // ViewController()
+    let viewController =  ViewController()
     let rootViewController = UINavigationController(rootViewController: viewController)
 
     window = UIWindow(windowScene: scene)
