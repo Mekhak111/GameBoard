@@ -14,30 +14,33 @@ class ViewController: UIViewController {
     super.viewDidLoad()
     view.backgroundColor = .white
     
-    // Create Plane Button
     let planeButton = createButton(
       title: "Plane",
       backgroundColor: .systemBlue
     )
     planeButton.addTarget(self, action: #selector(planeButtonTapped), for: .touchUpInside)
     
-    // Create Bowling Button
     let bowlingButton = createButton(
       title: "Bowling",
       backgroundColor: .systemGreen
     )
     bowlingButton.addTarget(self, action: #selector(bowlingButtonTapped), for: .touchUpInside)
     
-    // Add buttons to the view
+    let emojiButton = createButton(
+      title: "Emoji",
+      backgroundColor: .systemYellow
+    )
+    emojiButton.addTarget(self, action: #selector(emojiButtonTapped), for: .touchUpInside)
+    
     view.addSubview(planeButton)
     view.addSubview(bowlingButton)
+    view.addSubview(emojiButton)
     
-    // Set button constraints
     planeButton.translatesAutoresizingMaskIntoConstraints = false
     bowlingButton.translatesAutoresizingMaskIntoConstraints = false
+    emojiButton.translatesAutoresizingMaskIntoConstraints = false
     
     NSLayoutConstraint.activate([
-      // Plane Button Constraints
       planeButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
       planeButton.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -50),
       planeButton.widthAnchor.constraint(equalToConstant: 200),
@@ -48,10 +51,14 @@ class ViewController: UIViewController {
       bowlingButton.topAnchor.constraint(equalTo: planeButton.bottomAnchor, constant: 20),
       bowlingButton.widthAnchor.constraint(equalToConstant: 200),
       bowlingButton.heightAnchor.constraint(equalToConstant: 50),
+      
+      emojiButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+      emojiButton.topAnchor.constraint(equalTo: bowlingButton.bottomAnchor, constant:20),
+      emojiButton.widthAnchor.constraint(equalToConstant: 200),
+      emojiButton.heightAnchor.constraint(equalToConstant: 50),
     ])
   }
   
-  // Helper to create a button
   private func createButton(title: String, backgroundColor: UIColor) -> UIButton {
       let button = UIButton(type: .system)
       button.setTitle(title, for: .normal)
@@ -63,7 +70,7 @@ class ViewController: UIViewController {
       
       return button
   }
-  // Button Actions
+
   @objc private func planeButtonTapped() {
     let planeVC = PlaneViewController()
     navigationController?.pushViewController(planeVC, animated: false)
@@ -72,6 +79,11 @@ class ViewController: UIViewController {
   @objc private func bowlingButtonTapped() {
     let bowlingVC = BowlingViewController()
     navigationController?.pushViewController(bowlingVC, animated: false)
+  }
+  
+  @objc private func emojiButtonTapped() {
+    let emojiVC = EmojiViewController()
+    navigationController?.pushViewController(emojiVC, animated: false)
   }
   
 }
