@@ -11,18 +11,12 @@ import ARKit
 import Vision
 import SwiftUI
 
-class PlaneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {  
+class PlaneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
   
-  var gameFloor = SCNNode()
+  
   var sceneView: ARSCNView!
   var handPoseRequest: VNDetectHumanHandPoseRequest!
-  var grabbedNode: SCNNode?
-  var customPlaneNode: SCNNode?
-  var selectedBox: SCNNode? = nil
-  var previousColor: UIColor? = nil
-  
   var planeNode: SCNNode?
-  var isPlaced = false
   
   override func viewDidLoad() {
     super.viewDidLoad()
