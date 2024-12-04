@@ -38,15 +38,23 @@ class ViewController: UIViewController {
     )
     maskButton.addTarget(self, action: #selector(maskButtonTapped), for: .touchUpInside)
     
+    let shooterButton = createButton(
+      title: "Shooter",
+      backgroundColor: .blue
+    )
+    shooterButton.addTarget(self, action: #selector(shooterButtonTapped), for: .touchUpInside)
+    
     view.addSubview(planeButton)
     view.addSubview(bowlingButton)
     view.addSubview(emojiButton)
     view.addSubview(maskButton)
+    view.addSubview(shooterButton)
     
     planeButton.translatesAutoresizingMaskIntoConstraints = false
     bowlingButton.translatesAutoresizingMaskIntoConstraints = false
     emojiButton.translatesAutoresizingMaskIntoConstraints = false
     maskButton.translatesAutoresizingMaskIntoConstraints = false
+    shooterButton.translatesAutoresizingMaskIntoConstraints = false
     
     NSLayoutConstraint.activate([
       planeButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -68,6 +76,11 @@ class ViewController: UIViewController {
       maskButton.topAnchor.constraint(equalTo: emojiButton.bottomAnchor, constant:20),
       maskButton.widthAnchor.constraint(equalToConstant: 200),
       maskButton.heightAnchor.constraint(equalToConstant: 50),
+      
+      shooterButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+      shooterButton.topAnchor.constraint(equalTo: maskButton.bottomAnchor, constant:20),
+      shooterButton.widthAnchor.constraint(equalToConstant: 200),
+      shooterButton.heightAnchor.constraint(equalToConstant: 50),
     ])
   }
   
@@ -101,6 +114,11 @@ class ViewController: UIViewController {
   @objc private func maskButtonTapped() {
     let maskVC = MaskViewController()
     navigationController?.pushViewController(maskVC, animated: false)
+  }
+  
+  @objc private func shooterButtonTapped() {
+    let shooterVC = ShooterViewController()
+    navigationController?.pushViewController(shooterVC, animated: false)
   }
   
 }
