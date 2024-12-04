@@ -9,62 +9,81 @@ import ARKit
 import UIKit
 
 class ViewController: UIViewController {
-
-  private let configuration = ARWorldTrackingConfiguration()
-
-  private lazy var sceneView: ARSCNView = {
-    let sceneView = ARSCNView()
-    sceneView.translatesAutoresizingMaskIntoConstraints = false
-    sceneView.debugOptions = [.showWorldOrigin, .showFeaturePoints]
-    return sceneView
-  }()
-
-  private lazy var bowlingGameButton: UIBarButtonItem = {
-    var config = UIButton.Configuration.filled()
-    config.title = "Play Bowling"
-    config.contentInsets = .init(top: 0, leading: 16, bottom: 0, trailing: 16)
-    config.baseBackgroundColor = .white
-    config.baseForegroundColor = .black
-    config.cornerStyle = .capsule
-
-    let barButtonItem = UIBarButtonItem()
-    let button = UIButton()
-    button.translatesAutoresizingMaskIntoConstraints = false
-    button.configuration = config
-    button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
-    button.heightAnchor.constraint(equalToConstant: 40).isActive = true
-    button.addTarget(self, action: #selector(playBowlingAction), for: .touchUpInside)
-    barButtonItem.customView = button
-    return barButtonItem
-  }()
-
+  
   override func viewDidLoad() {
     super.viewDidLoad()
-
-    setupSubViews()
-  }
-
-  override func viewDidAppear(_ animated: Bool) {
-    super.viewDidAppear(animated)
-
-    sceneView.session.run(configuration)
-  }
-
-  private func setupSubViews() {
-    view.addSubview(sceneView)
+    view.backgroundColor = .white
     
-    sceneView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
-    sceneView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
-    sceneView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-    sceneView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
-
-    navigationItem.rightBarButtonItem = bowlingGameButton
+    let planeButton = createButton(
+      title: "Plane",
+      backgroundColor: .systemBlue
+    )
+    planeButton.addTarget(self, action: #selector(planeButtonTapped), for: .touchUpInside)
+    
+    let bowlingButton = createButton(
+      title: "Bowling",
+      backgroundColor: .systemGreen
+    )
+    bowlingButton.addTarget(self, action: #selector(bowlingButtonTapped), for: .touchUpInside)
+    
+    let emojiButton = createButton(
+      title: "Emoji",
+      backgroundColor: .systemYellow
+    )
+    emojiButton.addTarget(self, action: #selector(emojiButtonTapped), for: .touchUpInside)
+    
+    view.addSubview(planeButton)
+    view.addSubview(bowlingButton)
+    view.addSubview(emojiButton)
+    
+    planeButton.translatesAutoresizingMaskIntoConstraints = false
+    bowlingButton.translatesAutoresizingMaskIntoConstraints = false
+    emojiButton.translatesAutoresizingMaskIntoConstraints = false
+    
+    NSLayoutConstraint.activate([
+      planeButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+      planeButton.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -50),
+      planeButton.widthAnchor.constraint(equalToConstant: 200),
+      planeButton.heightAnchor.constraint(equalToConstant: 50),
+      
+      // Bowling Button Constraints
+      bowlingButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+      bowlingButton.topAnchor.constraint(equalTo: planeButton.bottomAnchor, constant: 20),
+      bowlingButton.widthAnchor.constraint(equalToConstant: 200),
+      bowlingButton.heightAnchor.constraint(equalToConstant: 50),
+      
+      emojiButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+      emojiButton.topAnchor.constraint(equalTo: bowlingButton.bottomAnchor, constant:20),
+      emojiButton.widthAnchor.constraint(equalToConstant: 200),
+      emojiButton.heightAnchor.constraint(equalToConstant: 50),
+    ])
+  }
+  
+  private func createButton(title: String, backgroundColor: UIColor) -> UIButton {
+      let button = UIButton(type: .system)
+      button.setTitle(title, for: .normal)
+      button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 18)
+      button.tintColor = .white
+      button.backgroundColor = backgroundColor
+      button.layer.cornerRadius = 10
+      button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+      
+      return button
   }
 
-  @objc private func playBowlingAction() {
-    sceneView.session.pause()
+  @objc private func planeButtonTapped() {
+    let planeVC = PlaneViewController()
+    navigationController?.pushViewController(planeVC, animated: false)
+  }
+  
+  @objc private func bowlingButtonTapped() {
     let bowlingVC = BowlingViewController()
     navigationController?.pushViewController(bowlingVC, animated: false)
   }
-
+  
+  @objc private func emojiButtonTapped() {
+    let emojiVC = EmojiViewController()
+    navigationController?.pushViewController(emojiVC, animated: false)
+  }
+  
 }
