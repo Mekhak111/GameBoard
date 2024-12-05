@@ -151,7 +151,7 @@ extension PlaneViewController {
     
     let distance = hypot(thumbTip.x - indexTip.x, thumbTip.y - indexTip.y)
     
-    return distance < 0.03
+    return distance < 0.05
   }
   
   func detectPinchWithMiddleGesture(observation: VNHumanHandPoseObservation) -> Bool {
@@ -160,7 +160,7 @@ extension PlaneViewController {
     
     let distance = hypot(thumbTip.x - midTIp.x, thumbTip.y - midTIp.y)
     
-    return distance < 0.03
+    return distance < 0.05
   }
   
   func detectPinchWithRingGesture(observation: VNHumanHandPoseObservation) -> Bool {
@@ -169,7 +169,7 @@ extension PlaneViewController {
     
     let distance = hypot(thumbTip.x - ringTIp.x, thumbTip.y - ringTIp.y)
     
-    return distance < 0.03
+    return distance < 0.05
   }
   
   func detectPinchWithLittleGesture(observation: VNHumanHandPoseObservation) -> Bool {
@@ -178,7 +178,7 @@ extension PlaneViewController {
     
     let distance = hypot(thumbTip.x - littleTip.x, thumbTip.y - littleTip.y)
     
-    return distance < 0.03
+    return distance < 0.05
   }
   func detectVictoryGesture(from observation: VNHumanHandPoseObservation) -> Bool {
       do {
