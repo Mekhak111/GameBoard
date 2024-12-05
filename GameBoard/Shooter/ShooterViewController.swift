@@ -14,6 +14,8 @@ class ShooterViewController: UIViewController, ARSessionDelegate, ARSCNViewDeleg
   var arView: ARSCNView!
   var handPoseRequest: VNDetectHumanHandPoseRequest!
   private var shootsLabel: UILabel!
+  
+  var gestureManager: GestureManager = GestureManager()
   var shootsCount: Int = 0 {
     didSet {
       DispatchQueue.main.async { [weak self] in
@@ -21,6 +23,7 @@ class ShooterViewController: UIViewController, ARSessionDelegate, ARSCNViewDeleg
       }
     }
   }
+  
   
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -109,7 +112,7 @@ class ShooterViewController: UIViewController, ARSessionDelegate, ARSCNViewDeleg
   }
   
   func handlePinchGesture(observation: VNHumanHandPoseObservation) {
-    if detectPinchWithMiddleGesture(observation: observation) {
+    if gestureManager.detectPinchWithMiddleGesture(observation: observation) {
       guard let pointOFView = arView.pointOfView else { return }
       let transform = pointOFView.transform
       let orientation = SCNVector3(-transform.m31 , -transform.m32, -transform.m33 )
@@ -132,20 +135,6 @@ class ShooterViewController: UIViewController, ARSessionDelegate, ARSCNViewDeleg
       arView.scene.rootNode.addChildNode(bulletNode)
     }
   }
-  
-  func detectPinchWithMiddleGesture(observation: VNHumanHandPoseObservation) -> Bool {
-    guard let thumbTip = try? observation.recognizedPoints(.thumb)[.thumbTip],
-          let midTIp = try? observation.recognizedPoints(.middleFinger)[.middleTip] else { return false }
-    
-    let distance = hypot(thumbTip.x - midTIp.x, thumbTip.y - midTIp.y)
-    
-    return distance < 0.02
-  }
-    
-  func distance(from point1: CGPoint, to point2: CGPoint) -> CGFloat {
-      return hypot(point1.x - point2.x, point1.y - point2.y)
-  }
-
   
 }
 
