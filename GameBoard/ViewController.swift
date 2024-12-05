@@ -28,7 +28,7 @@ class ViewController: UIViewController {
     
     let emojiButton = createButton(
       title: "Emoji",
-      backgroundColor: .systemBlue
+      backgroundColor: .purple
     )
     emojiButton.addTarget(self, action: #selector(emojiButtonTapped), for: .touchUpInside)
     
@@ -40,25 +40,34 @@ class ViewController: UIViewController {
     
     let shooterButton = createButton(
       title: "Shooter",
-      backgroundColor: .blue
+      backgroundColor: .systemBlue
     )
     shooterButton.addTarget(self, action: #selector(shooterButtonTapped), for: .touchUpInside)
+    
+    let bodyButton = createButton(
+      title: "Body",
+      backgroundColor: .orange
+    )
+    bodyButton.addTarget(self, action: #selector(bodyButtonTapped), for: .touchUpInside)
+
     
     view.addSubview(planeButton)
     view.addSubview(bowlingButton)
     view.addSubview(emojiButton)
     view.addSubview(maskButton)
     view.addSubview(shooterButton)
+    view.addSubview(bodyButton)
     
     planeButton.translatesAutoresizingMaskIntoConstraints = false
     bowlingButton.translatesAutoresizingMaskIntoConstraints = false
     emojiButton.translatesAutoresizingMaskIntoConstraints = false
     maskButton.translatesAutoresizingMaskIntoConstraints = false
     shooterButton.translatesAutoresizingMaskIntoConstraints = false
+    bodyButton.translatesAutoresizingMaskIntoConstraints = false
     
     NSLayoutConstraint.activate([
       planeButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-      planeButton.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -50),
+      planeButton.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -30),
       planeButton.widthAnchor.constraint(equalToConstant: 200),
       planeButton.heightAnchor.constraint(equalToConstant: 50),
       
@@ -81,6 +90,11 @@ class ViewController: UIViewController {
       shooterButton.topAnchor.constraint(equalTo: maskButton.bottomAnchor, constant:20),
       shooterButton.widthAnchor.constraint(equalToConstant: 200),
       shooterButton.heightAnchor.constraint(equalToConstant: 50),
+      
+      bodyButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+      bodyButton.topAnchor.constraint(equalTo: shooterButton.bottomAnchor, constant:20),
+      bodyButton.widthAnchor.constraint(equalToConstant: 200),
+      bodyButton.heightAnchor.constraint(equalToConstant: 50),
     ])
   }
   
@@ -119,6 +133,11 @@ class ViewController: UIViewController {
   @objc private func shooterButtonTapped() {
     let shooterVC = ShooterViewController()
     navigationController?.pushViewController(shooterVC, animated: false)
+  }
+  
+  @objc private func bodyButtonTapped() {
+    let bodyVC = BodyViewController()
+    navigationController?.pushViewController(bodyVC, animated: false)
   }
   
 }
