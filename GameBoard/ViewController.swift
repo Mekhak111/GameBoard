@@ -105,7 +105,6 @@ class ViewController: UIViewController {
     button.tintColor = .white
     button.backgroundColor = backgroundColor
     button.layer.cornerRadius = 10
-    button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
     
     return button
   }

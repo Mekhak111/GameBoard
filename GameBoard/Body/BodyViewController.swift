@@ -66,7 +66,6 @@ class BodyViewController: UIViewController, ARSCNViewDelegate {
     DispatchQueue.main.async {
       self.updateSkeleton(for: bodyAnchor, on: node)
       guard node.childNodes.count > 1 else { return }
-      self.detectDistanceofTwoJoints(node1: node.childNodes[1] , node2: node.childNodes[2])
     }
   }
   
@@ -77,6 +76,9 @@ class BodyViewController: UIViewController, ARSCNViewDelegate {
         let jointNode = createJointNode()
         jointNode.simdTransform = jointTransform
         jointNode.name = jointName
+        if jointName == "root" {
+          jointNode.geometry?.firstMaterial?.diffuse.contents = UIColor.black
+        }
         node.addChildNode(jointNode)
       }
     }
@@ -132,14 +134,14 @@ class BodyViewController: UIViewController, ARSCNViewDelegate {
           let leftFoot = jointPositions["left_foot_joint"]
     else { return }
     
-    if leftHand.y > leftShoulder.y, !isLeftHandUp {
+    if leftHand.y - leftShoulder.y > 0.2, !isLeftHandUp {
       isLeftHandUp = true
       leftHandAudioPlayer?.play()
     } else if leftHand.y <= leftShoulder.y {
       isLeftHandUp = false
     }
     
-    if rightHand.y > rightShoulder.y, !isRightHandUp {
+    if rightHand.y - rightShoulder.y > 0.2, !isRightHandUp {
       isRightHandUp = true
       rightHandAudioPlayer?.play()
     } else if rightHand.y <= rightShoulder.y {
