@@ -67,7 +67,7 @@ class ViewController: UIViewController {
     
     NSLayoutConstraint.activate([
       planeButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-      planeButton.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -30),
+      planeButton.centerYAnchor.constraint(equalTo: view.topAnchor, constant: 250),
       planeButton.widthAnchor.constraint(equalToConstant: 200),
       planeButton.heightAnchor.constraint(equalToConstant: 50),
       
@@ -105,7 +105,6 @@ class ViewController: UIViewController {
     button.tintColor = .white
     button.backgroundColor = backgroundColor
     button.layer.cornerRadius = 10
-    button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
     
     return button
   }

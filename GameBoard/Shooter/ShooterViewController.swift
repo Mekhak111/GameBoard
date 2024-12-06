@@ -19,7 +19,7 @@ class ShooterViewController: UIViewController, ARSessionDelegate, ARSCNViewDeleg
   var shootsCount: Int = 0 {
     didSet {
       DispatchQueue.main.async { [weak self] in
-        self?.shootsLabel.text = "Shoots: \( self?.shootsCount )"
+        self?.shootsLabel.text = "Shoots: \( self?.shootsCount ?? 0 )"
       }
     }
   }
