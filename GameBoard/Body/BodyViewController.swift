@@ -11,7 +11,7 @@ import AVFoundation
 
 class BodyViewController: UIViewController, ARSCNViewDelegate {
   
-  private var sceneView: ARSCNView!
+  private var scnView: ARSCNView!
   private var leftHandAudioPlayer: AVAudioPlayer?
   private var rightHandAudioPlayer: AVAudioPlayer?
   private var rightFootAudioPlayer: AVAudioPlayer?
@@ -23,27 +23,27 @@ class BodyViewController: UIViewController, ARSCNViewDelegate {
   
   override func viewDidLoad() {
     super.viewDidLoad()
-    setupSCeneView()
+    setupSCNView()
     configuration()
     setUpPlayers()
   }
   
   override func viewWillDisappear(_ animated: Bool) {
     super.viewWillDisappear(animated)
-    sceneView.session.pause()
+    scnView.session.pause()
   }
   
-  private func setupSCeneView() {
-    sceneView = ARSCNView(frame: view.bounds)
-    sceneView.delegate = self
-    sceneView.automaticallyUpdatesLighting = true
-    view.addSubview(sceneView)
+  private func setupSCNView() {
+    scnView = ARSCNView(frame: view.bounds)
+    scnView.delegate = self
+    scnView.automaticallyUpdatesLighting = true
+    view.addSubview(scnView)
   }
   
   private func configuration() {
     let configuration = ARBodyTrackingConfiguration()
     configuration.isAutoFocusEnabled = true
-    sceneView.session.run(configuration)
+    scnView.session.run(configuration)
   }
   
   private func setUpPlayers() {
