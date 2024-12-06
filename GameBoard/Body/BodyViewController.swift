@@ -94,7 +94,7 @@ class BodyViewController: UIViewController, ARSCNViewDelegate {
     }
     playSoundsBased(on: jointPositions)
   }
-    
+  
   private func detectDistanceofTwoJoints(node1: SCNNode, node2: SCNNode) -> Float {
     let xDiff = node1.position.x - node2.position.x
     let ydiff = node1.position.y - node2.position.y
@@ -123,46 +123,42 @@ class BodyViewController: UIViewController, ARSCNViewDelegate {
   }
   
   func playSoundsBased(on jointPositions: [String: SCNVector3]) {
-    if let leftHand = jointPositions["left_hand_joint"],
-       let leftShoulder = jointPositions["left_shoulder_1_joint"] {
-      if leftHand.y > leftShoulder.y, !isLeftHandUp {
-        isLeftHandUp = true
-        leftHandAudioPlayer?.play()
-      } else if leftHand.y <= leftShoulder.y {
-        isLeftHandUp = false
-      }
+    
+    guard let leftHand = jointPositions["left_hand_joint"],
+          let leftShoulder = jointPositions["left_shoulder_1_joint"],
+          let rightHand = jointPositions["right_hand_joint"],
+          let rightShoulder = jointPositions["right_shoulder_1_joint"],
+          let rightFoot = jointPositions["right_foot_joint"],
+          let leftFoot = jointPositions["left_foot_joint"]
+    else { return }
+    
+    if leftHand.y > leftShoulder.y, !isLeftHandUp {
+      isLeftHandUp = true
+      leftHandAudioPlayer?.play()
+    } else if leftHand.y <= leftShoulder.y {
+      isLeftHandUp = false
     }
     
-    if let rightHand = jointPositions["right_hand_joint"],
-       let rightShoulder = jointPositions["right_shoulder_1_joint"] {
-      if rightHand.y > rightShoulder.y, !isRightHandUp {
-        isRightHandUp = true
-        rightHandAudioPlayer?.play()
-      } else if rightHand.y <= rightShoulder.y {
-        isRightHandUp = false
-      }
+    if rightHand.y > rightShoulder.y, !isRightHandUp {
+      isRightHandUp = true
+      rightHandAudioPlayer?.play()
+    } else if rightHand.y <= rightShoulder.y {
+      isRightHandUp = false
     }
     
-    if let rightFoot = jointPositions["right_foot_joint"],
-       let leftFoot = jointPositions["left_foot_joint"] {
-      if rightFoot.z - leftFoot.z > 0.2, !isRightFootForward {
-        isRightFootForward = true
-        rightFootAudioPlayer?.play()
-      } else if rightFoot.z <= leftFoot.z {
-        isRightFootForward = false
-      }
+    if rightFoot.y - leftFoot.y > 0.2, !isRightFootForward {
+      isRightFootForward = true
+      rightFootAudioPlayer?.play()
+    } else if rightFoot.y <= leftFoot.y {
+      isRightFootForward = false
     }
     
-    if let rightFoot = jointPositions["right_foot_joint"],
-       let leftFoot = jointPositions["left_foot_joint"] {
-      if leftFoot.z - rightFoot.z > 0.2, !isLeftFootForward {
-        isLeftFootForward = true
-        leftFootAudioPlayer?.play()
-      } else if rightFoot.z <= leftFoot.z {
-        isLeftFootForward = false
-      }
+    if leftFoot.y - rightFoot.y > 0.2, !isLeftFootForward {
+      isLeftFootForward = true
+      leftFootAudioPlayer?.play()
+    } else if rightFoot.y <= leftFoot.y {
+      isLeftFootForward = false
     }
-    
   }
   
 }
