@@ -79,31 +79,6 @@ class BowlingViewController: UIViewController {
     button.addTarget(self, action: #selector(addBall), for: .touchUpInside)
     return button
   }()
-  
-  private lazy var giveBallButton: UIButton = {
-    var config = UIButton.Configuration.filled()
-    let image = UIImage()
-    config.image = UIImage(systemName: "soccerball")
-    config.baseBackgroundColor = .white
-    config.baseForegroundColor = .black
-    config.cornerStyle = .capsule
-
-    let button = UIButton()
-    button.translatesAutoresizingMaskIntoConstraints = false
-    button.configuration = config
-    button.heightAnchor.constraint(equalToConstant: 80).isActive = true
-    button.widthAnchor.constraint(equalToConstant: 80).isActive = true
-    button.addTarget(self, action: #selector(giveBall), for: .touchUpInside)
-    return button
-  }()
-  
-  private lazy var buttonStackView: UIStackView = {
-    let hStack = UIStackView(arrangedSubviews: [throwBallButton, giveBallButton])
-    hStack.translatesAutoresizingMaskIntoConstraints = false
-    hStack.axis = .horizontal
-    hStack.spacing = 10
-    return hStack
-  }()
 
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -135,10 +110,10 @@ class BowlingViewController: UIViewController {
     sceneView.autoenablesDefaultLighting = true
     viewModel.configuration.planeDetection = .horizontal
 
-    sceneView.addSubview(buttonStackView)
-    buttonStackView.bottomAnchor.constraint(equalTo: sceneView.bottomAnchor, constant: -40)
+    sceneView.addSubview(throwBallButton)
+    throwBallButton.bottomAnchor.constraint(equalTo: sceneView.bottomAnchor, constant: -40)
       .isActive = true
-    buttonStackView.trailingAnchor.constraint(equalTo: sceneView.trailingAnchor, constant: -16)
+    throwBallButton.trailingAnchor.constraint(equalTo: sceneView.trailingAnchor, constant: -16)
       .isActive = true
   }
 
