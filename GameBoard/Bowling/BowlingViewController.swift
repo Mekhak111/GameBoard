@@ -11,48 +11,73 @@ import UIKit
 
 class BowlingViewController: UIViewController {
 
-  enum BitMaskCategory: Int {
-
-    case ball = 2
-    case figure = 3
-
-  }
-
-  var target: SCNNode?
-  private var gameFloor = SCNNode()
-  private var isPlaced: Bool = false
-  private var figures = [SCNNode()]
-  private var isArenaAdded: Bool = false
-  private let configuration = ARWorldTrackingConfiguration()
+  private let viewModel = BowlingViewModel()
 
   private lazy var sceneView: ARSCNView = {
     let sceneView = ARSCNView()
     sceneView.translatesAutoresizingMaskIntoConstraints = false
     sceneView.debugOptions = [.showWorldOrigin, .showFeaturePoints, .showPhysicsShapes]
     sceneView.delegate = self
-    let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleTap))
-    sceneView.addGestureRecognizer(tapGestureRecognizer)
+    sceneView.scene.physicsWorld.contactDelegate = self
     return sceneView
   }()
 
-  private lazy var addFiguresButton: UIBarButtonItem = {
+  private lazy var rightBarButtonItem: UIBarButtonItem = {
+    let barButtonItem = UIBarButtonItem()
+    let hStack = UIStackView(arrangedSubviews: [addPinsButton, resetPinsButton])
+    hStack.axis = .horizontal
+    hStack.spacing = 10
+    barButtonItem.customView = hStack
+    return barButtonItem
+  }()
+
+  private lazy var addPinsButton: UIButton = {
     var config = UIButton.Configuration.filled()
-    config.title = "Add Figures"
-    config.contentInsets = .init(top: 0, leading: 16, bottom: 0, trailing: 16)
+    config.image = UIImage(systemName: "plus.circle.fill")
     config.baseBackgroundColor = .white
     config.baseForegroundColor = .black
     config.cornerStyle = .capsule
 
-    let barButtonItem = UIBarButtonItem()
     let button = UIButton()
     button.translatesAutoresizingMaskIntoConstraints = false
     button.configuration = config
-    button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
     button.heightAnchor.constraint(equalToConstant: 40).isActive = true
-    button.addTarget(self, action: #selector(createFigures), for: .touchUpInside)
-    //    button.addTarget(self, action: #selector(createCube), for: .touchUpInside)
-    barButtonItem.customView = button
-    return barButtonItem
+    button.widthAnchor.constraint(equalToConstant: 40).isActive = true
+    button.addTarget(self, action: #selector(createPins), for: .touchUpInside)
+    return button
+  }()
+
+  private lazy var resetPinsButton: UIButton = {
+    var config = UIButton.Configuration.filled()
+    config.image = UIImage(systemName: "arrow.clockwise.circle.fill")
+    config.baseBackgroundColor = .white
+    config.baseForegroundColor = .black
+    config.cornerStyle = .capsule
+
+    let button = UIButton()
+    button.translatesAutoresizingMaskIntoConstraints = false
+    button.configuration = config
+    button.heightAnchor.constraint(equalToConstant: 40).isActive = true
+    button.widthAnchor.constraint(equalToConstant: 40).isActive = true
+    button.addTarget(self, action: #selector(resetPins), for: .touchUpInside)
+    return button
+  }()
+
+  private lazy var throwBallButton: UIButton = {
+    var config = UIButton.Configuration.filled()
+    let image = UIImage()
+    config.image = UIImage(systemName: "figure.bowling.circle.fill")
+    config.baseBackgroundColor = .white
+    config.baseForegroundColor = .black
+    config.cornerStyle = .capsule
+
+    let button = UIButton()
+    button.translatesAutoresizingMaskIntoConstraints = false
+    button.configuration = config
+    button.heightAnchor.constraint(equalToConstant: 80).isActive = true
+    button.widthAnchor.constraint(equalToConstant: 80).isActive = true
+    button.addTarget(self, action: #selector(addBall), for: .touchUpInside)
+    return button
   }()
 
   override func viewDidLoad() {
@@ -64,7 +89,7 @@ class BowlingViewController: UIViewController {
   override func viewDidAppear(_ animated: Bool) {
     super.viewDidAppear(animated)
 
-    sceneView.session.run(configuration)
+    sceneView.session.run(viewModel.configuration)
   }
 
   override func viewDidDisappear(_ animated: Bool) {
@@ -75,158 +100,107 @@ class BowlingViewController: UIViewController {
 
   private func setupSubViews() {
     view.backgroundColor = .red
-    navigationItem.title = "Bowling Game"
-    navigationItem.rightBarButtonItem = addFiguresButton
+    navigationItem.title = "Bowling"
+    navigationItem.rightBarButtonItem = rightBarButtonItem
     view.addSubview(sceneView)
     sceneView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
     sceneView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
     sceneView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
     sceneView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
     sceneView.autoenablesDefaultLighting = true
-    configuration.planeDetection = .horizontal
+    viewModel.configuration.planeDetection = .horizontal
+
+    sceneView.addSubview(throwBallButton)
+    throwBallButton.bottomAnchor.constraint(equalTo: sceneView.bottomAnchor, constant: -40)
+      .isActive = true
+    throwBallButton.trailingAnchor.constraint(equalTo: sceneView.trailingAnchor, constant: -16)
+      .isActive = true
   }
 
-  private func createFloor(planeAnchor: ARPlaneAnchor) -> SCNNode {
-    let floorNode = SCNNode(
-      geometry: SCNBox(
-        width: CGFloat(planeAnchor.extent.x * 2.0),
-        height: 0.01,
-        length: CGFloat(planeAnchor.extent.x * 2.0),
-        chamferRadius: 0
-      )
-    )
-
-    floorNode.geometry?.firstMaterial?.diffuse.contents = UIColor.green
-    floorNode.geometry?.firstMaterial?.isDoubleSided = true
-    floorNode.position = SCNVector3(
-      planeAnchor.center.x,
-      planeAnchor.center.y - 0.005,
-      planeAnchor.center.z
-    )
-
-    let shape = SCNPhysicsShape(geometry: floorNode.geometry!)
-    floorNode.physicsBody = SCNPhysicsBody(type: .static, shape: shape)
-    floorNode.physicsBody?.isAffectedByGravity = false
-    return floorNode
+  @objc private func resetPins() {
+    viewModel.resetPins()
   }
 
-  @objc private func createFigures() {
-//  private func createFigures(in node: SCNNode) {
-//    createPlaneForGameFloor()
-    setupFigures()
+  @objc private func createPins() {
     let scene = SCNScene(named: "BowlingPin.scn")
-    guard let figure = scene?.rootNode.childNode(withName: "figure", recursively: false)
-    else { return }
-    figures.removeAll()
-    for index in 1...10 {
-      let pin = figure.clone()
-      let scale: Float = 0.001
-      let position = getBowlingPinPosition(index: index)
-      let relativePosition = SCNVector3(x: 0, y: 0, z: 3)
-      pin.scale = .init(x: scale, y: scale, z: scale)
-
-      let width = (pin.boundingBox.max.x - pin.boundingBox.min.x) * scale
-      let height = (pin.boundingBox.max.y - pin.boundingBox.min.y) * scale
-      pin.position = .init(
-        x: Float(position.x) + relativePosition.x,
-        y: height + 0.5,
-        z: Float(position.z) + relativePosition.z
-      )
-
-      let (minBound, maxBound) = pin.boundingBox
-      let centerOffset = SCNVector3(
-        (minBound.x + maxBound.x) / 2.0,
-        (minBound.y + maxBound.y) / 2.0,
-        (minBound.z + maxBound.z) / 2.0
-      )
-      pin.pivot = SCNMatrix4MakeTranslation(centerOffset.x, centerOffset.y, centerOffset.z)
-
-      let cone = SCNCone(
-        topRadius: CGFloat(width / 2),
-        bottomRadius: CGFloat(width / 2),
-        height: CGFloat(height)
-      )
-      
-      let updatedPin = SCNNode(geometry: cone)
-      let coneShape = SCNPhysicsShape(geometry: updatedPin.geometry!)
-      let physicsBody = SCNPhysicsBody(type: .dynamic, shape: coneShape)
-            physicsBody.damping = 0.5
-      pin.physicsBody = physicsBody
-      
-      figures.append(pin)
-//      node.addChildNode(pin)
-//      gameFloor.addChildNode(pin)
-    }
-    
-    figures.forEach { pin in
-      gameFloor.addChildNode(pin)
-    }
-  }
-  
-  private func createPlaneForGameFloor() {
-    let floorNode = SCNNode(
-      geometry: SCNBox(
-        width: 2.0,
-        height: 0.01,
-        length: 6.0,
-        chamferRadius: 0
-      )
-    )
-
-    floorNode.geometry?.firstMaterial?.diffuse.contents = UIColor.clear
-    floorNode.geometry?.firstMaterial?.isDoubleSided = true
-    floorNode.position = SCNVector3(0, 0.005, 3)
-
-    let shape = SCNPhysicsShape(geometry: floorNode.geometry!)
-    floorNode.physicsBody = SCNPhysicsBody(type: .static, shape: shape)
-    floorNode.physicsBody?.isAffectedByGravity = false
-    gameFloor.addChildNode(floorNode)
+    viewModel.createPins(from: scene)
   }
 
   @objc private func addBall() {
     let scene = SCNScene(named: "Ball.scn")
     guard let ball = scene?.rootNode.childNode(withName: "Ball", recursively: false) else { return }
-    var gameFloorPosition = self.gameFloor.position
-    if !figures.isEmpty {
-      gameFloorPosition = figures.randomElement()?.position ?? gameFloorPosition
-      for figure in figures {
-        print("Figure Position: \(figure.position)")
-      }
+
+    guard let pinParent = viewModel.gameFloor.childNode(withName: "PinParent", recursively: true)
+    else {
+      return
     }
-    ball.scale = .init(x: 0.002, y: 0.002, z: 0.002)
+    let gameFloorPosition = pinParent.position
+    let scale: Float = 0.05
+
+    ball.scale = .init(x: scale, y: scale, z: scale)
     ball.position = SCNVector3(
-      gameFloorPosition.x,
-      0.5,
-      gameFloorPosition.z
+      gameFloorPosition.x + Float(randomNumber(firstNum: -2, secondNum: 2)),
+      0.2,
+      gameFloorPosition.z + 3
+    )
+    ball.pivot = SCNMatrix4MakeTranslation(
+      ball.boundingSphere.center.x / 2,
+      ball.boundingSphere.center.y / 2,
+      ball.boundingSphere.center.z / 2
     )
 
-    let radius = (ball.boundingBox.max.y - ball.boundingBox.min.y) * 0.001
-    let updatedSphere = SCNNode(geometry: SCNSphere(radius: CGFloat(radius)))
-    let shape = SCNPhysicsShape(geometry: updatedSphere.geometry!)
+    let sphere = SCNSphere(radius: 0.02 * CGFloat(ball.boundingSphere.radius))
+    let updatedSphere = SCNNode(geometry: sphere)
+    let sphereShape = SCNPhysicsShape(geometry: updatedSphere.geometry!)
 
-    let physicsBody = SCNPhysicsBody(type: .dynamic, shape: shape)
+    let physicsBody = SCNPhysicsBody(type: .dynamic, shape: sphereShape)
     physicsBody.damping = 0.5
+    physicsBody.mass = 8
+    physicsBody.applyForce(.init(0, 0, -80), asImpulse: true)
+    physicsBody.contactTestBitMask = 30
+    physicsBody.categoryBitMask = 10
     ball.physicsBody = physicsBody
-    ball.physicsBody = physicsBody
-    gameFloor.addChildNode(ball)
+    ball.name = "givenBall"
+    pinParent.addChildNode(ball)
+    giveBall()
   }
+  
+  @objc private func giveBall() {
+    let scene = SCNScene(named: "Ball.scn")
+    guard let ball = scene?.rootNode.childNode(withName: "Ball", recursively: false) else { return }
 
-  private func getBowlingPinPosition(
-    index: Int,
-    spacing: Double = 0.1
-  ) -> (
-    x: Double, y: Double, z: Double
-  ) {
-    var row = 1
-    var currentPinCount = 0
-    while currentPinCount + row < index {
-      currentPinCount += row
-      row += 1
+    guard let startNode = viewModel.gameFloor.childNode(withName: "start", recursively: true)
+    else {
+      return
     }
-    let positionInRow = index - currentPinCount - 1
-    let x = Double(positionInRow) * spacing - Double(row - 1) * spacing / 2
-    let z = -Double(row - 1) * spacing
-    return (x, 0.0, z)
+    
+    let ballPosition = startNode.position
+    let scale: Float = 0.05
+
+    ball.scale = .init(x: scale, y: scale, z: scale)
+    ball.position = SCNVector3(
+      ballPosition.x,
+      0,
+      ballPosition.z
+    )
+    ball.pivot = SCNMatrix4MakeTranslation(
+      ball.boundingSphere.center.x / 2,
+      ball.boundingSphere.center.y / 2,
+      ball.boundingSphere.center.z / 2
+    )
+
+    let sphere = SCNSphere(radius: 0.02 * CGFloat(ball.boundingSphere.radius))
+    let updatedSphere = SCNNode(geometry: sphere)
+    let sphereShape = SCNPhysicsShape(geometry: updatedSphere.geometry!)
+
+    let physicsBody = SCNPhysicsBody(type: .dynamic, shape: sphereShape)
+    physicsBody.damping = 0.5
+    physicsBody.mass = 3
+    physicsBody.contactTestBitMask = 20
+    physicsBody.categoryBitMask = 10
+    ball.physicsBody = physicsBody
+    ball.name = "givenBall"
+    startNode.addChildNode(ball)
   }
 
   private func randomNumber(firstNum: CGFloat, secondNum: CGFloat) -> CGFloat {
@@ -234,62 +208,38 @@ class BowlingViewController: UIViewController {
       + min(firstNum, secondNum)
   }
 
-  @objc private func handleTap(_ sender: UITapGestureRecognizer) {
-    guard let sceneView = sender.view as? ARSCNView else { return }
-
-    let touchLocation = sender.location(in: sceneView)
-    guard
-      let query = sceneView.raycastQuery(
-        from: touchLocation,
-        allowing: .existingPlaneInfinite,
-        alignment: .horizontal
-      )
-    else {
-      return
-    }
-
-    let results = sceneView.session.raycast(query)
-    guard let hitTestResult = results.first else {
-      print("No surface found")
-      return
-    }
-
-    if !isArenaAdded {
-      addArena(hitResult: hitTestResult)
-      isArenaAdded = true
-    }
-  }
-
-  private func addArena(hitResult: ARRaycastResult) {
+  private func addPortal(planeAnchor: ARPlaneAnchor) {
     guard let portalScene = SCNScene(named: "Portal.scn"),
       let portalNode = portalScene.rootNode.childNode(
         withName: "Portal",
         recursively: false
+      ),
+      let bowlingScene = SCNScene(named: "BowlingArena.scn"),
+      let bowlingNode = bowlingScene.rootNode.childNode(
+        withName: "BowlingArena",
+        recursively: false
       )
     else { return }
 
-    guard let bowlingScene = SCNScene(named: "BowlingScene.scn"),
-      let bowlingNode = bowlingScene.rootNode.childNode(
-        withName: "BowlingArena", recursively: false)
-    else { return }
-
-    bowlingNode.physicsBody = SCNPhysicsBody(
-      type: .static,
-      shape: SCNPhysicsShape(node: bowlingNode)
-    )
-    
+    bowlingNode.eulerAngles.y = -.pi / 2
+    bowlingNode.position = SCNVector3(0, 0.2, -3)
     portalNode.addChildNode(bowlingNode)
 
-    let transform = hitResult.worldTransform
-    let planeXPosition = transform.columns.3.x
-    let planeYPosition = transform.columns.3.y
-    let planeZPosition = transform.columns.3.z
+    let height = (portalNode.boundingBox.max.y - portalNode.boundingBox.min.y)
+
     portalNode.position = SCNVector3(
-      planeXPosition,
-      planeYPosition,
-      planeZPosition + 3
+      planeAnchor.center.x,
+      (-height / 2) - 0.2,
+      planeAnchor.center.z - 3 // + 3
     )
+
+    viewModel.gameFloor = portalNode
     sceneView.scene.rootNode.addChildNode(portalNode)
+    addTexture(for: portalNode)
+    viewModel.setupFloor()
+  }
+
+  private func addTexture(for portalNode: SCNNode) {
     addPlane(nodeName: "roof", portalNode: portalNode)
     addPlane(nodeName: "floor", portalNode: portalNode)
     addWalls(nodeName: "leftSideDoor", portalNode: portalNode)
@@ -297,63 +247,35 @@ class BowlingViewController: UIViewController {
     addWalls(nodeName: "backWall", portalNode: portalNode)
     addWalls(nodeName: "leftWall", portalNode: portalNode)
     addWalls(nodeName: "rightWall", portalNode: portalNode)
-    setupFigures()
   }
 
-  private func addPlane(nodeName: String, portalNode: SCNNode, imageName: String = "WoodTexture") {
-    let child = portalNode.childNode(withName: nodeName, recursively: true)
-    child?.geometry?.firstMaterial?.diffuse.contents = UIImage(named: "WoodTexture")
-    child?.renderingOrder = 200
-  }
-
-  private func addWalls(nodeName: String, portalNode: SCNNode, imageName: String = "WoodTexture") {
+  private func addPlane(
+    nodeName: String,
+    portalNode: SCNNode,
+    imageName: String = "WoodTexture"
+  ) {
     let child = portalNode.childNode(withName: nodeName, recursively: true)
     child?.geometry?.firstMaterial?.diffuse.contents = UIImage(named: imageName)
+    child?.geometry?.firstMaterial?.isDoubleSided = true
+    child?.renderingOrder = 200
+  }
+
+  private func addWalls(
+    nodeName: String,
+    portalNode: SCNNode,
+    imageName: String = "wall"
+  ) {
+    let child = portalNode.childNode(withName: nodeName, recursively: true)
+    child?.geometry?.firstMaterial?.diffuse.contents = UIImage(named: imageName)
+    child?.geometry?.firstMaterial?.isDoubleSided = true
     child?.renderingOrder = 200
     if let mask = child?.childNode(withName: "mask", recursively: false) {
-      mask.geometry?.firstMaterial?.transparency = 0.000001
+      if nodeName == "leftSideDoor" || nodeName == "rightSideDoor" {
+        mask.geometry?.firstMaterial?.diffuse.contents = UIImage(named: "bowlingPhoto")
+      } else {
+        mask.geometry?.firstMaterial?.diffuse.contents = UIImage(named: "wall")
+      }
     }
-  }
-
-  private func setupFigures() {
-    guard let portalScene = SCNScene(named: "BowlingScene.scn"),
-      let portalNode = portalScene.rootNode.childNode(withName: "BowlingArena", recursively: false),
-      let lane = portalNode.childNode(withName: "lane", recursively: true)
-    else { return }
-    
-//    let width = (lane.boundingBox.max.x - lane.boundingBox.min.x)
-//    let height = (lane.boundingBox.max.y - lane.boundingBox.min.y)
-//    let length = (lane.boundingBox.max.z - lane.boundingBox.min.z)
-//
-//    let box = SCNBox(width: CGFloat(width), height: CGFloat(height), length: CGFloat(length), chamferRadius: 0)
-//
-//    let shape = SCNPhysicsShape(geometry: portalNode)
-//    lane.physicsBody = SCNPhysicsBody(type: .static, shape: shape)
-//    lane.physicsBody?.isAffectedByGravity = false
-    
-    let shape = SCNPhysicsShape(
-      node: portalNode,
-      options: [SCNPhysicsShape.Option.type: SCNPhysicsShape.ShapeType.boundingBox]
-    )
-    let physicsBody = SCNPhysicsBody(type: .static, shape: shape)
-    physicsBody.isAffectedByGravity = false
-    portalNode.physicsBody = physicsBody
-    
-    gameFloor = portalNode
-    
-    sceneView.scene.rootNode.addChildNode(gameFloor)
-  }
-
-  private func createCube() {
-    let cube = SCNBox(width: 0.5, height: 0.5, length: 0.5, chamferRadius: 0.05)
-    let cubeNode = SCNNode(geometry: cube)
-    let cubeShape = SCNPhysicsShape(geometry: cubeNode.geometry!)
-    let physicsBody = SCNPhysicsBody(type: .static, shape: cubeShape)
-    //    physicsBody.damping = 0.5
-    cubeNode.physicsBody = physicsBody
-    cubeNode.geometry?.firstMaterial?.diffuse.contents = UIColor.red
-//    cubeNode.position = .init(x: -1, y: 0, z: -1)
-    gameFloor.addChildNode(cubeNode)
   }
 
 }
@@ -363,25 +285,41 @@ extension BowlingViewController: ARSCNViewDelegate {
   func renderer(
     _ renderer: any SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor
   ) {
-    //    guard let planeAnchor = anchor as? ARPlaneAnchor else { return }
-    //    print("Horizontal plane is detected...")
-    //
-    //    if !isPlaced {
-    //      let gameFloor = createFloor(planeAnchor: planeAnchor)
-    //      self.gameFloor = gameFloor
-    //      sceneView.scene.rootNode.addChildNode(gameFloor)
-    //      isPlaced = true
-    //    }
+    guard let planeAnchor = anchor as? ARPlaneAnchor else { return }
+    print("Horizontal plane is detected...")
+
+    if !viewModel.isPlaced {
+      addPortal(planeAnchor: planeAnchor)
+      viewModel.isPlaced = true
+    }
   }
 
 }
 
-extension Int {
-
-  var degreesToRadians: Double { Double(self) * .pi / 180 }
-
-}
-
-func + (left: SCNVector3, right: SCNVector3) -> SCNVector3 {
-  SCNVector3Make(left.x + right.x, left.y + right.y, left.z + right.z)
+extension BowlingViewController: SCNPhysicsContactDelegate {
+  
+  func physicsWorld(_ world: SCNPhysicsWorld, didBegin contact: SCNPhysicsContact) {
+    let nodeA = contact.nodeA
+    let nodeB = contact.nodeB
+    
+    if nodeA.physicsBody?.categoryBitMask == 10 {
+      if nodeB.physicsBody?.categoryBitMask == 20 {
+        print("NodeB is \(nodeB.name)")
+        nodeA.physicsBody?.applyForce(.init(0, 0, 0.5), asImpulse: true)
+      } else if nodeB.physicsBody?.categoryBitMask == 30 {
+        print("NodeB is \(nodeB.name)")
+        print("Collision detected...")
+      }
+    } else if nodeB.physicsBody?.categoryBitMask == 10 {
+      if nodeA.physicsBody?.categoryBitMask == 20 {
+        print("NodeA is \(nodeA.name)")
+        nodeB.physicsBody?.applyForce(.init(0, 0, 0.5), asImpulse: true)
+      } else if nodeA.physicsBody?.categoryBitMask == 30 {
+        print("NodeA is \(nodeA.name)")
+        print("Collision detected...")
+      }
+    }
+    
+  }
+  
 }

@@ -9,23 +9,23 @@ import ARKit
 import UIKit
 
 class ViewController: UIViewController {
-  
+
   override func viewDidLoad() {
     super.viewDidLoad()
     view.backgroundColor = .white
-    
+
     let planeButton = createButton(
       title: "Plane",
       backgroundColor: .systemGreen
     )
     planeButton.addTarget(self, action: #selector(planeButtonTapped), for: .touchUpInside)
-    
+
     let bowlingButton = createButton(
       title: "Bowling",
       backgroundColor: .systemPink
     )
     bowlingButton.addTarget(self, action: #selector(bowlingButtonTapped), for: .touchUpInside)
-    
+
     let emojiButton = createButton(
       title: "Emoji",
       backgroundColor: .purple
@@ -75,9 +75,9 @@ class ViewController: UIViewController {
       bowlingButton.topAnchor.constraint(equalTo: planeButton.bottomAnchor, constant: 20),
       bowlingButton.widthAnchor.constraint(equalToConstant: 200),
       bowlingButton.heightAnchor.constraint(equalToConstant: 50),
-      
+
       emojiButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-      emojiButton.topAnchor.constraint(equalTo: bowlingButton.bottomAnchor, constant:20),
+      emojiButton.topAnchor.constraint(equalTo: bowlingButton.bottomAnchor, constant: 20),
       emojiButton.widthAnchor.constraint(equalToConstant: 200),
       emojiButton.heightAnchor.constraint(equalToConstant: 50),
       
@@ -97,7 +97,7 @@ class ViewController: UIViewController {
       bodyButton.heightAnchor.constraint(equalToConstant: 50),
     ])
   }
-  
+
   private func createButton(title: String, backgroundColor: UIColor) -> UIButton {
     let button = UIButton(type: .system)
     button.setTitle(title, for: .normal)
@@ -113,12 +113,12 @@ class ViewController: UIViewController {
     let planeVC = PlaneViewController()
     navigationController?.pushViewController(planeVC, animated: false)
   }
-  
+
   @objc private func bowlingButtonTapped() {
     let bowlingVC = BowlingViewController()
     navigationController?.pushViewController(bowlingVC, animated: false)
   }
-  
+
   @objc private func emojiButtonTapped() {
     let emojiVC = EmojiViewController()
     navigationController?.pushViewController(emojiVC, animated: false)
