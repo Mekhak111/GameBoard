@@ -10,8 +10,8 @@ import ARKit
 
 class JengaViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
   
-  var sceneView: ARSCNView!
-  var currentSphereNode: SCNNode?
+  private var sceneView: ARSCNView!
+  private var currentSphereNode: SCNNode?
   private var isJengaTowerCreated: Bool = false
   private var chosenNode: SCNNode?
   
@@ -33,35 +33,35 @@ class JengaViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegat
   }
   
   private func addControlButtons() {
-      let buttonSize: CGFloat = 50
-      let spacing: CGFloat = 20
-      let centerX = self.view.bounds.width / 2
-      let bottomY = self.view.bounds.height - 200
-      
-      let leftButton = createButton(imageName: "arrow.left", action: #selector(moveLeft))
-      let rightButton = createButton(imageName: "arrow.right", action: #selector(moveRight))
-      let upButton = createButton(imageName: "arrow.up", action: #selector(moveUp))
-      let downButton = createButton(imageName: "arrow.down", action: #selector(moveDown))
-      
-      leftButton.frame = CGRect(x: centerX - buttonSize - spacing, y: bottomY, width: buttonSize, height: buttonSize)
-      rightButton.frame = CGRect(x: centerX + spacing, y: bottomY, width: buttonSize, height: buttonSize)
-      upButton.frame = CGRect(x: centerX - buttonSize / 2, y: bottomY - buttonSize - spacing, width: buttonSize, height: buttonSize)
-      downButton.frame = CGRect(x: centerX - buttonSize / 2, y: bottomY + buttonSize + spacing, width: buttonSize, height: buttonSize)
-      
-      self.view.addSubview(leftButton)
-      self.view.addSubview(rightButton)
-      self.view.addSubview(upButton)
-      self.view.addSubview(downButton)
+    let buttonSize: CGFloat = 50
+    let spacing: CGFloat = 20
+    let centerX = self.view.bounds.width / 2
+    let bottomY = self.view.bounds.height - 200
+    
+    let leftButton = createButton(imageName: "arrow.left", action: #selector(moveLeft))
+    let rightButton = createButton(imageName: "arrow.right", action: #selector(moveRight))
+    let upButton = createButton(imageName: "arrow.up", action: #selector(moveUp))
+    let downButton = createButton(imageName: "arrow.down", action: #selector(moveDown))
+    
+    leftButton.frame = CGRect(x: centerX - buttonSize - spacing, y: bottomY, width: buttonSize, height: buttonSize)
+    rightButton.frame = CGRect(x: centerX + spacing, y: bottomY, width: buttonSize, height: buttonSize)
+    upButton.frame = CGRect(x: centerX - buttonSize / 2, y: bottomY - buttonSize - spacing, width: buttonSize, height: buttonSize)
+    downButton.frame = CGRect(x: centerX - buttonSize / 2, y: bottomY + buttonSize + spacing, width: buttonSize, height: buttonSize)
+    
+    self.view.addSubview(leftButton)
+    self.view.addSubview(rightButton)
+    self.view.addSubview(upButton)
+    self.view.addSubview(downButton)
   }
-
+  
   private func createButton(imageName: String, action: Selector) -> UIButton {
-      let button = UIButton(type: .system)
-      button.setImage(UIImage(systemName: imageName), for: .normal)
-      button.tintColor = .white
-      button.backgroundColor = UIColor.black.withAlphaComponent(0.7)
-      button.layer.cornerRadius = 25
-      button.addTarget(self, action: action, for: .touchUpInside)
-      return button
+    let button = UIButton(type: .system)
+    button.setImage(UIImage(systemName: imageName), for: .normal)
+    button.tintColor = .white
+    button.backgroundColor = UIColor.black.withAlphaComponent(0.7)
+    button.layer.cornerRadius = 25
+    button.addTarget(self, action: action, for: .touchUpInside)
+    return button
   }
   
   private func configuration() {
@@ -123,27 +123,22 @@ class JengaViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegat
   
   @objc func handleTap(sender: UITapGestureRecognizer) {
     if isJengaTowerCreated {
-      addBox(sender: sender)
+      selectBox(sender: sender)
     } else {
       createJengaTower()
     }
   }
   
-  func addBox(sender: UITapGestureRecognizer) {
+  func selectBox(sender: UITapGestureRecognizer) {
     let location = sender.location(in: sceneView)
     let hitResults = sceneView.hitTest(location, options: nil)
-    
-    if let hitResult = hitResults.first {
+    guard let hitResult = hitResults.first else { return }
       let tappedNode = hitResult.node
-      print("Tapped node: \(tappedNode.name ?? "Unnamed node")")
       if tappedNode.name != "plane" {
         chosenNode?.geometry?.firstMaterial?.diffuse.contents = UIColor.random()
         chosenNode = tappedNode
         chosenNode?.geometry?.firstMaterial?.diffuse.contents = UIColor.white
       }
-    } else {
-      print("No node was tapped.")
-    }
   }
   
   func addPlane() {
@@ -193,11 +188,11 @@ class JengaViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegat
   @objc private func moveRight() {
     chosenNode?.physicsBody?.applyForce(SCNVector3(5, 0, 0), asImpulse: true)
   }
-
+  
   @objc private func moveUp() {
     chosenNode?.physicsBody?.applyForce(SCNVector3(0, 0, -5), asImpulse: true)
   }
-
+  
   @objc private func moveDown() {
     chosenNode?.physicsBody?.applyForce(SCNVector3(0, 0, 5), asImpulse: true)
   }
