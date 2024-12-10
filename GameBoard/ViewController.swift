@@ -49,6 +49,11 @@ class ViewController: UIViewController {
       backgroundColor: .orange
     )
     bodyButton.addTarget(self, action: #selector(bodyButtonTapped), for: .touchUpInside)
+    let jengaButton = createButton(
+      title: "Jenga",
+      backgroundColor: .systemPink
+    )
+    jengaButton.addTarget(self, action: #selector(jengaButtonTapped), for: .touchUpInside)
 
     
     view.addSubview(planeButton)
@@ -57,6 +62,7 @@ class ViewController: UIViewController {
     view.addSubview(maskButton)
     view.addSubview(shooterButton)
     view.addSubview(bodyButton)
+    view.addSubview(jengaButton)
     
     planeButton.translatesAutoresizingMaskIntoConstraints = false
     bowlingButton.translatesAutoresizingMaskIntoConstraints = false
@@ -64,6 +70,7 @@ class ViewController: UIViewController {
     maskButton.translatesAutoresizingMaskIntoConstraints = false
     shooterButton.translatesAutoresizingMaskIntoConstraints = false
     bodyButton.translatesAutoresizingMaskIntoConstraints = false
+    jengaButton.translatesAutoresizingMaskIntoConstraints = false
     
     NSLayoutConstraint.activate([
       planeButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -95,6 +102,11 @@ class ViewController: UIViewController {
       bodyButton.topAnchor.constraint(equalTo: shooterButton.bottomAnchor, constant:20),
       bodyButton.widthAnchor.constraint(equalToConstant: 200),
       bodyButton.heightAnchor.constraint(equalToConstant: 50),
+      
+      jengaButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+      jengaButton.topAnchor.constraint(equalTo: bodyButton.bottomAnchor, constant:20),
+      jengaButton.widthAnchor.constraint(equalToConstant: 200),
+      jengaButton.heightAnchor.constraint(equalToConstant: 50),
     ])
   }
 
@@ -137,6 +149,11 @@ class ViewController: UIViewController {
   @objc private func bodyButtonTapped() {
     let bodyVC = BodyViewController()
     navigationController?.pushViewController(bodyVC, animated: false)
+  }
+
+  @objc private func jengaButtonTapped() {
+    let jengaVC = JengaViewController()
+    navigationController?.pushViewController(jengaVC, animated: false)
   }
   
 }
