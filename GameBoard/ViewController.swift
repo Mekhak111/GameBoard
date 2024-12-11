@@ -9,23 +9,23 @@ import ARKit
 import UIKit
 
 class ViewController: UIViewController {
-
+  
   override func viewDidLoad() {
     super.viewDidLoad()
     view.backgroundColor = .white
-
+    
     let planeButton = createButton(
       title: "Plane",
       backgroundColor: .systemGreen
     )
     planeButton.addTarget(self, action: #selector(planeButtonTapped), for: .touchUpInside)
-
+    
     let bowlingButton = createButton(
       title: "Bowling",
       backgroundColor: .systemPink
     )
     bowlingButton.addTarget(self, action: #selector(bowlingButtonTapped), for: .touchUpInside)
-
+    
     let emojiButton = createButton(
       title: "Emoji",
       backgroundColor: .purple
@@ -49,7 +49,13 @@ class ViewController: UIViewController {
       backgroundColor: .orange
     )
     bodyButton.addTarget(self, action: #selector(bodyButtonTapped), for: .touchUpInside)
-
+    
+    let numberButton = createButton(
+      title: "Number",
+      backgroundColor: .systemPink
+    )
+    numberButton.addTarget(self, action: #selector(numberButtonTapped), for: .touchUpInside)
+    
     
     view.addSubview(planeButton)
     view.addSubview(bowlingButton)
@@ -57,6 +63,7 @@ class ViewController: UIViewController {
     view.addSubview(maskButton)
     view.addSubview(shooterButton)
     view.addSubview(bodyButton)
+    view.addSubview(numberButton)
     
     planeButton.translatesAutoresizingMaskIntoConstraints = false
     bowlingButton.translatesAutoresizingMaskIntoConstraints = false
@@ -64,6 +71,7 @@ class ViewController: UIViewController {
     maskButton.translatesAutoresizingMaskIntoConstraints = false
     shooterButton.translatesAutoresizingMaskIntoConstraints = false
     bodyButton.translatesAutoresizingMaskIntoConstraints = false
+    numberButton.translatesAutoresizingMaskIntoConstraints = false
     
     NSLayoutConstraint.activate([
       planeButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -75,7 +83,7 @@ class ViewController: UIViewController {
       bowlingButton.topAnchor.constraint(equalTo: planeButton.bottomAnchor, constant: 20),
       bowlingButton.widthAnchor.constraint(equalToConstant: 200),
       bowlingButton.heightAnchor.constraint(equalToConstant: 50),
-
+      
       emojiButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
       emojiButton.topAnchor.constraint(equalTo: bowlingButton.bottomAnchor, constant: 20),
       emojiButton.widthAnchor.constraint(equalToConstant: 200),
@@ -95,9 +103,14 @@ class ViewController: UIViewController {
       bodyButton.topAnchor.constraint(equalTo: shooterButton.bottomAnchor, constant:20),
       bodyButton.widthAnchor.constraint(equalToConstant: 200),
       bodyButton.heightAnchor.constraint(equalToConstant: 50),
+      
+      numberButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+      numberButton.topAnchor.constraint(equalTo: bodyButton.bottomAnchor, constant:20),
+      numberButton.widthAnchor.constraint(equalToConstant: 200),
+      numberButton.heightAnchor.constraint(equalToConstant: 50),
     ])
   }
-
+  
   private func createButton(title: String, backgroundColor: UIColor) -> UIButton {
     let button = UIButton(type: .system)
     button.setTitle(title, for: .normal)
@@ -113,12 +126,12 @@ class ViewController: UIViewController {
     let planeVC = PlaneViewController()
     navigationController?.pushViewController(planeVC, animated: false)
   }
-
+  
   @objc private func bowlingButtonTapped() {
     let bowlingVC = BowlingViewController()
     navigationController?.pushViewController(bowlingVC, animated: false)
   }
-
+  
   @objc private func emojiButtonTapped() {
     let emojiVC = EmojiViewController()
     navigationController?.pushViewController(emojiVC, animated: false)
@@ -137,6 +150,11 @@ class ViewController: UIViewController {
   @objc private func bodyButtonTapped() {
     let bodyVC = BodyViewController()
     navigationController?.pushViewController(bodyVC, animated: false)
+  }
+  
+  @objc private func numberButtonTapped() {
+    let numberVC = NumberViewController()
+    navigationController?.pushViewController(numberVC, animated: false)
   }
   
 }
