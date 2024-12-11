@@ -11,11 +11,11 @@ import Vision
 
 class ShooterViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
   
+  private var shootsLabel: UILabel!
   var arView: ARSCNView!
   var handPoseRequest: VNDetectHumanHandPoseRequest!
-  private var shootsLabel: UILabel!
   
-  var gestureManager: GestureManager = GestureManager()
+  let gestureManager: GestureManager = GestureManager()
   var shootsCount: Int = 0 {
     didSet {
       DispatchQueue.main.async { [weak self] in

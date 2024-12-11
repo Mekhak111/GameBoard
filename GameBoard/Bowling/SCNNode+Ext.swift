@@ -46,7 +46,7 @@ extension SCNNode {
     let physicsBody = SCNPhysicsBody(type: .static, shape: planeShape)
     physicsBody.isAffectedByGravity = false
     self.physicsBody = physicsBody
-    self.geometry?.firstMaterial?.diffuse.contents = color // UIColor.clear
+    self.geometry?.firstMaterial?.diffuse.contents = UIColor.clear
     self.geometry?.firstMaterial?.isDoubleSided = true
   }
 
