@@ -13,11 +13,10 @@ import SwiftUI
 
 class PlaneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
   
-  
   var sceneView: ARSCNView!
   var handPoseRequest: VNDetectHumanHandPoseRequest!
   var planeNode: SCNNode?
-  var gestureManager: GestureManager = GestureManager()
+  let gestureManager: GestureManager = GestureManager()
   
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -70,7 +69,6 @@ class PlaneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
       if let results = handPoseRequest.results {
         for observation in results {
           processHandPose(observation)
-          
         }
       } else {
         planeNode?.physicsBody?.clearAllForces()

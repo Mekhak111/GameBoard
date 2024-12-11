@@ -9,22 +9,33 @@ import ARKit
 import SwiftUI
 import UIKit
 
+enum Bitmask: Int {
+
+  case ball = 10
+  case floor = 20
+  case pin = 30
+  case finishFloor = 40
+
+}
+
 class BowlingViewController: UIViewController {
 
   private let viewModel = BowlingViewModel()
+  let gestureManager: GestureManager = GestureManager()
 
   private lazy var sceneView: ARSCNView = {
     let sceneView = ARSCNView()
     sceneView.translatesAutoresizingMaskIntoConstraints = false
     sceneView.debugOptions = [.showWorldOrigin, .showFeaturePoints, .showPhysicsShapes]
     sceneView.delegate = self
+    sceneView.session.delegate = self
     sceneView.scene.physicsWorld.contactDelegate = self
     return sceneView
   }()
 
   private lazy var rightBarButtonItem: UIBarButtonItem = {
     let barButtonItem = UIBarButtonItem()
-    let hStack = UIStackView(arrangedSubviews: [addPinsButton, resetPinsButton])
+    let hStack = UIStackView(arrangedSubviews: [addPinsButton, resetButton])
     hStack.axis = .horizontal
     hStack.spacing = 10
     barButtonItem.customView = hStack
@@ -47,7 +58,7 @@ class BowlingViewController: UIViewController {
     return button
   }()
 
-  private lazy var resetPinsButton: UIButton = {
+  private lazy var resetButton: UIButton = {
     var config = UIButton.Configuration.filled()
     config.image = UIImage(systemName: "arrow.clockwise.circle.fill")
     config.baseBackgroundColor = .white
@@ -59,7 +70,7 @@ class BowlingViewController: UIViewController {
     button.configuration = config
     button.heightAnchor.constraint(equalToConstant: 40).isActive = true
     button.widthAnchor.constraint(equalToConstant: 40).isActive = true
-    button.addTarget(self, action: #selector(resetPins), for: .touchUpInside)
+    button.addTarget(self, action: #selector(reset), for: .touchUpInside)
     return button
   }()
 
@@ -80,15 +91,25 @@ class BowlingViewController: UIViewController {
     return button
   }()
 
+  private lazy var infoLabel: UILabel = {
+    let label = UILabel()
+    label.translatesAutoresizingMaskIntoConstraints = false
+    label.textColor = .blue
+    label.backgroundColor = .white
+    return label
+  }()
+
   override func viewDidLoad() {
     super.viewDidLoad()
 
     setupSubViews()
+    setupHandPoseDetection()
   }
 
   override func viewDidAppear(_ animated: Bool) {
     super.viewDidAppear(animated)
 
+    viewModel.configuration.frameSemantics = .sceneDepth
     sceneView.session.run(viewModel.configuration)
   }
 
@@ -115,33 +136,48 @@ class BowlingViewController: UIViewController {
       .isActive = true
     throwBallButton.trailingAnchor.constraint(equalTo: sceneView.trailingAnchor, constant: -16)
       .isActive = true
+
+    sceneView.addSubview(infoLabel)
+    infoLabel.bottomAnchor.constraint(equalTo: throwBallButton.topAnchor, constant: 8).isActive =
+      true
+    infoLabel.leftAnchor.constraint(equalTo: sceneView.leftAnchor).isActive = true
+    infoLabel.rightAnchor.constraint(equalTo: sceneView.rightAnchor).isActive = true
   }
 
-  @objc private func resetPins() {
+  @objc private func reset() {
     viewModel.resetPins()
+    viewModel.resetBalls()
   }
 
   @objc private func createPins() {
     let scene = SCNScene(named: "BowlingPin.scn")
     viewModel.createPins(from: scene)
+    guard viewModel.gameFloor.childNode(withName: "givenBall", recursively: true) != nil else {
+      giveBall()
+      DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+        self.giveBall()
+      }
+      return
+    }
   }
 
   @objc private func addBall() {
+    viewModel.removeGivenBallFromParent()
     let scene = SCNScene(named: "Ball.scn")
-    guard let ball = scene?.rootNode.childNode(withName: "Ball", recursively: false) else { return }
-
-    guard let pinParent = viewModel.gameFloor.childNode(withName: "PinParent", recursively: true)
-    else {
-      return
-    }
+    guard let ball = scene?.rootNode.childNode(withName: "Ball", recursively: false),
+          let pinParent = viewModel.gameFloor.childNode(withName: "PinParent", recursively: true)
+    else { return }
+    
+    viewModel.isBallMoving = true
+    throwBallButton.isEnabled = !viewModel.isBallMoving
     let gameFloorPosition = pinParent.position
     let scale: Float = 0.05
 
     ball.scale = .init(x: scale, y: scale, z: scale)
     ball.position = SCNVector3(
-      gameFloorPosition.x + Float(randomNumber(firstNum: -2, secondNum: 2)),
+      gameFloorPosition.x + Float(randomNumber(firstNum: -1.5, secondNum: 1.5)),
       0.2,
-      gameFloorPosition.z + 3
+      gameFloorPosition.z + 6
     )
     ball.pivot = SCNMatrix4MakeTranslation(
       ball.boundingSphere.center.x / 2,
@@ -157,23 +193,21 @@ class BowlingViewController: UIViewController {
     physicsBody.damping = 0.5
     physicsBody.mass = 8
     physicsBody.applyForce(.init(0, 0, -80), asImpulse: true)
-    physicsBody.contactTestBitMask = 30
-    physicsBody.categoryBitMask = 10
+    physicsBody.contactTestBitMask = Bitmask.pin.rawValue
+    physicsBody.contactTestBitMask = Bitmask.finishFloor.rawValue | Bitmask.pin.rawValue
+    physicsBody.categoryBitMask = Bitmask.ball.rawValue
     ball.physicsBody = physicsBody
     ball.name = "givenBall"
+    ball.geometry?.firstMaterial?.diffuse.contents = viewModel.ballTexture  // viewModel.ballColor
     pinParent.addChildNode(ball)
-    giveBall()
   }
-  
+
   @objc private func giveBall() {
     let scene = SCNScene(named: "Ball.scn")
-    guard let ball = scene?.rootNode.childNode(withName: "Ball", recursively: false) else { return }
+    guard let ball = scene?.rootNode.childNode(withName: "Ball", recursively: false),
+      let startNode = viewModel.gameFloor.childNode(withName: "start", recursively: true)
+    else { return }
 
-    guard let startNode = viewModel.gameFloor.childNode(withName: "start", recursively: true)
-    else {
-      return
-    }
-    
     let ballPosition = startNode.position
     let scale: Float = 0.05
 
@@ -196,10 +230,13 @@ class BowlingViewController: UIViewController {
     let physicsBody = SCNPhysicsBody(type: .dynamic, shape: sphereShape)
     physicsBody.damping = 0.5
     physicsBody.mass = 3
-    physicsBody.contactTestBitMask = 20
-    physicsBody.categoryBitMask = 10
+    physicsBody.contactTestBitMask = Bitmask.floor.rawValue
+    physicsBody.categoryBitMask = Bitmask.ball.rawValue
     ball.physicsBody = physicsBody
-    ball.name = "givenBall"
+    ball.name = "givenBall00"
+    //    let randomColor = RandomColor.allCases.randomElement()?.color
+    let randomTexture = RandomTexture.allCases.randomElement()?.textureImage
+    ball.geometry?.firstMaterial?.diffuse.contents = randomTexture
     startNode.addChildNode(ball)
   }
 
@@ -230,7 +267,7 @@ class BowlingViewController: UIViewController {
     portalNode.position = SCNVector3(
       planeAnchor.center.x,
       (-height / 2) - 0.2,
-      planeAnchor.center.z - 3 // + 3
+      planeAnchor.center.z - 3
     )
 
     viewModel.gameFloor = portalNode
@@ -278,6 +315,11 @@ class BowlingViewController: UIViewController {
     }
   }
 
+  private func setupHandPoseDetection() {
+    viewModel.handPoseRequest = VNDetectHumanHandPoseRequest()
+    viewModel.handPoseRequest.maximumHandCount = 1
+  }
+
 }
 
 extension BowlingViewController: ARSCNViewDelegate {
@@ -297,29 +339,100 @@ extension BowlingViewController: ARSCNViewDelegate {
 }
 
 extension BowlingViewController: SCNPhysicsContactDelegate {
-  
+
   func physicsWorld(_ world: SCNPhysicsWorld, didBegin contact: SCNPhysicsContact) {
     let nodeA = contact.nodeA
     let nodeB = contact.nodeB
-    
-    if nodeA.physicsBody?.categoryBitMask == 10 {
-      if nodeB.physicsBody?.categoryBitMask == 20 {
-        print("NodeB is \(nodeB.name)")
+
+    if nodeA.physicsBody?.categoryBitMask == Bitmask.ball.rawValue {
+      if nodeB.physicsBody?.categoryBitMask == Bitmask.floor.rawValue {
+        print("NodeB is \(nodeB.name ?? "No name")")
         nodeA.physicsBody?.applyForce(.init(0, 0, 0.5), asImpulse: true)
-      } else if nodeB.physicsBody?.categoryBitMask == 30 {
-        print("NodeB is \(nodeB.name)")
-        print("Collision detected...")
+      } else if nodeB.physicsBody?.categoryBitMask == Bitmask.pin.rawValue {
+        print("NodeB is \(nodeB.name ?? "No name")")
+        print("Pin Collision detected...")
+      } else if nodeB.physicsBody?.categoryBitMask == Bitmask.finishFloor.rawValue {
+        print("Finish floor....")
+        ballFallingDetected(nodeA)
       }
-    } else if nodeB.physicsBody?.categoryBitMask == 10 {
-      if nodeA.physicsBody?.categoryBitMask == 20 {
-        print("NodeA is \(nodeA.name)")
+    } else if nodeB.physicsBody?.categoryBitMask == Bitmask.ball.rawValue {
+      if nodeA.physicsBody?.categoryBitMask == Bitmask.floor.rawValue {
+        print("NodeA is \(nodeA.name ?? "No name")")
         nodeB.physicsBody?.applyForce(.init(0, 0, 0.5), asImpulse: true)
-      } else if nodeA.physicsBody?.categoryBitMask == 30 {
-        print("NodeA is \(nodeA.name)")
-        print("Collision detected...")
+      } else if nodeA.physicsBody?.categoryBitMask == Bitmask.pin.rawValue {
+        print("NodeA is \(nodeA.name ?? "No name")")
+        print("Pin Collision detected...")
+      } else if nodeA.physicsBody?.categoryBitMask == Bitmask.finishFloor.rawValue {
+        print("Finish floor....")
+        ballFallingDetected(nodeB)
       }
     }
-    
   }
-  
+
+  private func ballFallingDetected(_ node: SCNNode) {
+    viewModel.canThrowBall = true
+    viewModel.isBallMoving = false
+    DispatchQueue.main.async {
+      self.throwBallButton.isEnabled = !self.viewModel.isBallMoving
+    }
+    node.removeFromParentNode()
+    if !viewModel.isBallMoving && viewModel.canThrowBall {
+      giveBall()
+      viewModel.canThrowBall = false
+    }
+  }
+
+}
+
+extension BowlingViewController: ARSessionDelegate {
+
+  func session(_ session: ARSession, didUpdate frame: ARFrame) {
+    let pixelBuffer = frame.capturedImage
+    detectHands(pixelBuffer: pixelBuffer)
+  }
+
+  func detectHands(pixelBuffer: CVPixelBuffer) {
+    let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, options: [:])
+
+    do {
+      try handler.perform([viewModel.handPoseRequest])
+      guard let results = viewModel.handPoseRequest.results else { return }
+      for observation in results {
+        processHandPose(observation)
+      }
+    } catch {
+      print("Failed to detect hands: \(error)")
+    }
+  }
+
+  func processHandPose(_ observation: VNHumanHandPoseObservation) {
+    handleGesture(observation: observation)
+  }
+
+  func handleGesture(observation: VNHumanHandPoseObservation) {
+    if gestureManager.detectOpenHandGesture(from: observation) {
+      viewModel.canThrowBall = true
+      if !viewModel.isBallMoving && viewModel.canThrowBall {
+        addBall()
+        viewModel.canThrowBall = false
+      }
+    } else {
+      print("Unknown gesture Detected...")
+    }
+    
+    // gestureDidUpdate(observation)
+  }
+
+  private func gestureDidUpdate(_ observation: VNHumanHandPoseObservation) {
+    let gesture = gestureManager.detectGesture(observation: observation)
+
+    switch gesture {
+    case .closedHand: print("✊")
+    case .openedHand: print("✋")
+    case .like: print("👍")
+    case .unlike: print("👎")
+    case .unknown: print("❓")
+    }
+  }
+
 }

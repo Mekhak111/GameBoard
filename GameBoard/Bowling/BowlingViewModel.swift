@@ -28,7 +28,12 @@ class BowlingViewModel {
   var isPlaced: Bool = false
   var pins = [SCNNode()]
   var isArenaAdded: Bool = false
+  var canThrowBall: Bool = true
+  var ballColor: UIColor = .red
+  var ballTexture: UIImage? = UIImage(named: "texture1")
+  var isBallMoving: Bool = false
   let configuration = ARWorldTrackingConfiguration()
+  var handPoseRequest: VNDetectHumanHandPoseRequest!
   
   func getBowlingPinPosition(
     index: Int,
@@ -108,7 +113,8 @@ class BowlingViewModel {
       position: .init(0, -planeNodeYPosition, offset + floorOffset),
       plane: sideWallPlane,
       rotationAngles: .init(0, 0, 0),
-      color: .yellow
+      color: .yellow,
+      scale: 0.3
     )
   }
 
@@ -121,7 +127,8 @@ class BowlingViewModel {
       position: .init(0, -planeNodeYPosition, offset + floorOffset),
       plane: sideWallPlane,
       rotationAngles: .init(0, 0, 0),
-      color: .yellow
+      color: .yellow,
+      scale: 0.3
     )
   }
 
@@ -134,7 +141,8 @@ class BowlingViewModel {
       position: .init(0, -halfCylinderHeight, offset + floorOffset),
       plane: sideFloorPlane,
       rotationAngles: .init(-90.degreesToRadians, 0, 0),
-      color: .blue
+      color: .blue,
+      scale: 0.3
     )
   }
 
@@ -166,6 +174,31 @@ class BowlingViewModel {
     pins.removeAll()
     gameFloor.enumerateChildNodes { node, _ in
       if let name = node.name, name == "PinParent" {
+        node.removeFromParentNode()
+      }
+    }
+  }
+  
+  func resetBalls() {
+    gameFloor.enumerateChildNodes { node, _ in
+      if let name = node.name, name.contains("givenBall") {
+        node.removeFromParentNode()
+      }
+    }
+  }
+  
+  func removeGivenBallFromParent() {
+    var isGivenBallFound: Bool = false
+    gameFloor.enumerateChildNodes { node, stop in
+      guard !isGivenBallFound else { return }
+      if let name = node.name, name.contains("givenBall00") {
+        isGivenBallFound = true
+        if let color = node.geometry?.firstMaterial?.diffuse.contents as? UIColor {
+          ballColor = color
+        }
+        if let image = node.geometry?.firstMaterial?.diffuse.contents as? UIImage {
+          ballTexture = image
+        }
         node.removeFromParentNode()
       }
     }
@@ -209,8 +242,8 @@ class BowlingViewModel {
 
     let physicsBody = SCNPhysicsBody(type: .dynamic, shape: coneShape)
     physicsBody.damping = 0.5
-    physicsBody.contactTestBitMask = 10
-    physicsBody.categoryBitMask = 30
+    physicsBody.contactTestBitMask = Bitmask.ball.rawValue
+    physicsBody.categoryBitMask = Bitmask.pin.rawValue
     pin.physicsBody = physicsBody
     pin.name = "pin\(index)"
     return pin
