@@ -103,11 +103,12 @@ extension ObstaclesViewController: SCNPhysicsContactDelegate {
     let nodeB = contact.nodeB
     if nodeA.physicsBody?.contactTestBitMask == 2 && nodeB.physicsBody?.contactTestBitMask == 1 {
       nodeB.removeFromParentNode()
+      points += 1
     }
-    if nodeA.physicsBody?.contactTestBitMask == 3 {
+    if nodeA.physicsBody?.contactTestBitMask == 3 && points == 4 {
       restartGame()
     }
-    if nodeB.physicsBody?.contactTestBitMask == 3 {
+    if nodeB.physicsBody?.contactTestBitMask == 3 && points == 4 {
       restartGame()
     }
   }

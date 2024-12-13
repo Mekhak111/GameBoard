@@ -45,6 +45,8 @@ class AccelerometerManager {
         rotation = "Rotating back"
       } else if z < -0.3 {
         rotation = "Rotating forward"
+      } else {
+        rotation = "Unknown"
       }
       
       DispatchQueue.main.async {
