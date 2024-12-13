@@ -62,6 +62,18 @@ class ViewController: UIViewController {
     )
     faceButton.addTarget(self, action: #selector(faceButtonTapped), for: .touchUpInside)
     
+    let obstaclesButton = createButton(
+      title: "Obstacles",
+      backgroundColor: .magenta
+    )
+    obstaclesButton.addTarget(self, action: #selector(obstaclesButtonTapped), for: .touchUpInside)
+    
+    let tableButton = createButton(
+      title: "Table",
+      backgroundColor: .purple
+    )
+    tableButton.addTarget(self, action: #selector(tableButtonTapped), for: .touchUpInside)
+    
     
     view.addSubview(planeButton)
     view.addSubview(bowlingButton)
@@ -71,6 +83,8 @@ class ViewController: UIViewController {
     view.addSubview(bodyButton)
     view.addSubview(numberButton)
     view.addSubview(faceButton)
+    view.addSubview(obstaclesButton)
+    view.addSubview(tableButton)
     
     planeButton.translatesAutoresizingMaskIntoConstraints = false
     bowlingButton.translatesAutoresizingMaskIntoConstraints = false
@@ -80,10 +94,12 @@ class ViewController: UIViewController {
     bodyButton.translatesAutoresizingMaskIntoConstraints = false
     numberButton.translatesAutoresizingMaskIntoConstraints = false
     faceButton.translatesAutoresizingMaskIntoConstraints = false
+    obstaclesButton.translatesAutoresizingMaskIntoConstraints = false
+    tableButton.translatesAutoresizingMaskIntoConstraints = false
     
     NSLayoutConstraint.activate([
       planeButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-      planeButton.centerYAnchor.constraint(equalTo: view.topAnchor, constant: 250),
+      planeButton.centerYAnchor.constraint(equalTo: view.topAnchor, constant: 180),
       planeButton.widthAnchor.constraint(equalToConstant: 200),
       planeButton.heightAnchor.constraint(equalToConstant: 50),
       
@@ -121,6 +137,16 @@ class ViewController: UIViewController {
       faceButton.topAnchor.constraint(equalTo: numberButton.bottomAnchor, constant:20),
       faceButton.widthAnchor.constraint(equalToConstant: 200),
       faceButton.heightAnchor.constraint(equalToConstant: 50),
+      
+      obstaclesButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+      obstaclesButton.topAnchor.constraint(equalTo: faceButton.bottomAnchor, constant:20),
+      obstaclesButton.widthAnchor.constraint(equalToConstant: 200),
+      obstaclesButton.heightAnchor.constraint(equalToConstant: 50),
+      
+      tableButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+      tableButton.topAnchor.constraint(equalTo: obstaclesButton.bottomAnchor, constant:20),
+      tableButton.widthAnchor.constraint(equalToConstant: 200),
+      tableButton.heightAnchor.constraint(equalToConstant: 50),
     ])
   }
   
@@ -173,6 +199,16 @@ class ViewController: UIViewController {
   @objc private func faceButtonTapped() {
     let faceVC = FaceViewController()
     navigationController?.pushViewController(faceVC, animated: false)
+  }
+
+  @objc private func obstaclesButtonTapped() {
+    let obstacleVC = ObstaclesViewController()
+    navigationController?.pushViewController(obstacleVC, animated: false)
+  }
+  
+  @objc private func tableButtonTapped() {
+    let tableVC = TableViewController()
+    navigationController?.pushViewController(tableVC, animated: false)
   }
   
 }
