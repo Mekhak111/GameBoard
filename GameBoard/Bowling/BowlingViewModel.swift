@@ -442,14 +442,13 @@ class BowlingViewModel {
     else { return }
     
     let capsule = SCNCapsule(capRadius: 0.1, height: 18)
-    let cylinder = SCNCylinder(radius: 0.1, height: 18)
-    let cylinderNode = SCNNode(geometry: cylinder)
-    cylinderNode.geometry?.firstMaterial?.diffuse.contents = UIColor.red
-    cylinderNode.eulerAngles.x = .pi / 2
-    cylinderNode.position = .init(0, 0.8, 0)
-    cylinderNode.name = "Laser"
-    pinParent.addChildNode(cylinderNode)
-    animateLaser(node: cylinderNode)
+    let laserNode = SCNNode(geometry: capsule)
+    laserNode.geometry?.firstMaterial?.diffuse.contents = UIColor.red
+    laserNode.eulerAngles.x = .pi / 2
+    laserNode.position = .init(0, 0.8, 0)
+    laserNode.name = "Laser"
+    pinParent.addChildNode(laserNode)
+    animateLaser(node: laserNode)
   }
   
   private func animateLaser(node: SCNNode) {
