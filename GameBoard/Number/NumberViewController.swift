@@ -10,10 +10,10 @@ import ARKit
 
 class NumberViewController: UIViewController, ARSessionDelegate {
   
-  var arView: ARSCNView!
-  var drawButton: UIButton!
-  let digitMLModel = MNISTClassifier()
-  var idWithMaxConf:(String, Float) = ("", 0)
+  private var arView: ARSCNView!
+  private var drawButton: UIButton!
+  private let digitMLModel = try? NumberClassifier_1(configuration: .init())
+  private var confidenceDict: [String : Float] = ["0":0, "1":0, "2":0, "3":0, "4":0, "5":0, "6":0, "7":0, "8":0, "9":0]
   
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -26,9 +26,9 @@ class NumberViewController: UIViewController, ARSessionDelegate {
     createButton()
   }
   
-  func createButton() {
+  private func createButton() {
     drawButton = UIButton(type: .system)
-    drawButton.setTitle("Center Button", for: .normal)
+    drawButton.setTitle("Draw", for: .normal)
     drawButton.backgroundColor = .systemBlue
     drawButton.setTitleColor(.white, for: .normal)
     drawButton.layer.cornerRadius = 10
@@ -62,33 +62,45 @@ class NumberViewController: UIViewController, ARSessionDelegate {
     analyzeButton.addTarget(self, action: #selector(analyzeTapped), for: .touchUpInside)
     
   }
-  
-  func session(_ session: ARSession, didUpdate frame: ARFrame) {
-    
-  }
-  
-  func processFrame() {
+
+  private func processFrame() {
+    arView.isOpaque = false
+    let temp = arView.scene.background.contents
+    arView.scene.background.contents = UIColor.clear
     let image = arView.snapshot()
+    arView.isOpaque = true
+    arView.scene.background.contents = temp
     guard let ciiImage = CIImage(image: image) else { return }
     let imageRequestHandler = VNImageRequestHandler(ciImage: ciiImage)
     runCoreMLModel(handler: imageRequestHandler)
-    print(idWithMaxConf)
+    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+      print(self.confidenceDict)
+    }
   }
   
-  func runCoreMLModel(handler: VNImageRequestHandler) {
+  @objc func image(_ image: UIImage, didFinishSavingWithError error: Error?, contextInfo: UnsafeRawPointer) {
+    if let error = error {
+      print("Error saving screenshot: \(error.localizedDescription)")
+    } else {
+      print("Screenshot saved successfully!")
+    }
+  }
+  
+  private func runCoreMLModel(handler: VNImageRequestHandler) {
     do {
-      let visionModel = try VNCoreMLModel(for: digitMLModel.model)
+      guard let model = digitMLModel?.model else { return }
+      let visionModel = try VNCoreMLModel(for: model)
       let request = VNCoreMLRequest(model: visionModel) { [weak self] request, error in
         guard let results = request.results as? [VNClassificationObservation] else { return }
         results.forEach { res in
           print(res.identifier, res.confidence)
+          self?.confidenceDict[res.identifier] = res.confidence
         }
-        
         if let max = results.max(by:{ $0.confidence < $1.confidence } ) {
           print("Max \(max)")
         }
+        
       }
-      
       try handler.perform([request])
     } catch {
       print("Error performing request: \(error)")
@@ -106,7 +118,8 @@ class NumberViewController: UIViewController, ARSessionDelegate {
 }
 
 extension NumberViewController: ARSCNViewDelegate {
-  func renderer(_ renderer: any SCNSceneRenderer, willRenderScene scene: SCNScene, atTime time: TimeInterval) {
+  
+   func renderer(_ renderer: any SCNSceneRenderer, willRenderScene scene: SCNScene, atTime time: TimeInterval) {
     
     guard let pointOFView = arView.pointOfView else { return }
     let transform = pointOFView.transform
@@ -114,8 +127,6 @@ extension NumberViewController: ARSCNViewDelegate {
     let location = SCNVector3(transform.m41, transform.m42, transform.m43)
     let currentPositionOfCamera = orientation + location
     DispatchQueue.main.async {
-      
-      
       if self.drawButton.isHighlighted {
         let sphereNode = SCNNode(geometry: SCNSphere(radius: 0.01))
         sphereNode.position = currentPositionOfCamera

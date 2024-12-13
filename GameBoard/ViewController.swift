@@ -56,6 +56,12 @@ class ViewController: UIViewController {
     )
     numberButton.addTarget(self, action: #selector(numberButtonTapped), for: .touchUpInside)
     
+    let faceButton = createButton(
+      title: "Face",
+      backgroundColor: .systemMint
+    )
+    faceButton.addTarget(self, action: #selector(faceButtonTapped), for: .touchUpInside)
+    
     
     view.addSubview(planeButton)
     view.addSubview(bowlingButton)
@@ -64,6 +70,7 @@ class ViewController: UIViewController {
     view.addSubview(shooterButton)
     view.addSubview(bodyButton)
     view.addSubview(numberButton)
+    view.addSubview(faceButton)
     
     planeButton.translatesAutoresizingMaskIntoConstraints = false
     bowlingButton.translatesAutoresizingMaskIntoConstraints = false
@@ -72,6 +79,7 @@ class ViewController: UIViewController {
     shooterButton.translatesAutoresizingMaskIntoConstraints = false
     bodyButton.translatesAutoresizingMaskIntoConstraints = false
     numberButton.translatesAutoresizingMaskIntoConstraints = false
+    faceButton.translatesAutoresizingMaskIntoConstraints = false
     
     NSLayoutConstraint.activate([
       planeButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -108,6 +116,11 @@ class ViewController: UIViewController {
       numberButton.topAnchor.constraint(equalTo: bodyButton.bottomAnchor, constant:20),
       numberButton.widthAnchor.constraint(equalToConstant: 200),
       numberButton.heightAnchor.constraint(equalToConstant: 50),
+      
+      faceButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+      faceButton.topAnchor.constraint(equalTo: numberButton.bottomAnchor, constant:20),
+      faceButton.widthAnchor.constraint(equalToConstant: 200),
+      faceButton.heightAnchor.constraint(equalToConstant: 50),
     ])
   }
   
@@ -155,6 +168,11 @@ class ViewController: UIViewController {
   @objc private func numberButtonTapped() {
     let numberVC = NumberViewController()
     navigationController?.pushViewController(numberVC, animated: false)
+  }
+  
+  @objc private func faceButtonTapped() {
+    let faceVC = FaceViewController()
+    navigationController?.pushViewController(faceVC, animated: false)
   }
   
 }
