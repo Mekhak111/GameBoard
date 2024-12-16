@@ -13,6 +13,8 @@ class ViewController: UIViewController {
     super.viewDidLoad()
     view.backgroundColor = .white
     
+    setupNavigationBar()
+    
     let scrollView = UIScrollView()
     scrollView.translatesAutoresizingMaskIntoConstraints = false
     scrollView.backgroundColor = .clear
@@ -74,6 +76,17 @@ class ViewController: UIViewController {
         lastButton.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -20),
       ])
     }
+  }
+  
+  private func setupNavigationBar() {
+    let appearance = UINavigationBarAppearance()
+    appearance.configureWithTransparentBackground()
+    appearance.titleTextAttributes = [
+      .foregroundColor: UIColor.black,
+      .font: UIFont.boldSystemFont(ofSize: 24)
+    ]
+    navigationController?.navigationBar.standardAppearance = appearance
+    title = "ARKit"
   }
   
   private func createButton(title: String, backgroundColor: UIColor) -> UIButton {

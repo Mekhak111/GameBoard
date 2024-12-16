@@ -14,7 +14,7 @@
 		24C23CE02CF8AED90007F732 /* Exceptions for "GameBoard" folder in "GameBoard" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Info.plist,
+				Resources/Info.plist,
 			);
 			target = 24C23CCD2CF8AED80007F732 /* GameBoard */;
 		};
