@@ -5,7 +5,6 @@
 //  Created by Mekhak Ghapantsyan on 11/28/24.
 //
 
-import ARKit
 import UIKit
 
 class ViewController: UIViewController {
@@ -138,7 +137,7 @@ class ViewController: UIViewController {
   }
   
   @objc private func zooButtonTapped() {
-    let tableVC = ZooViewController()
-    navigationController?.pushViewController(tableVC, animated: false)
+    let zooVC = ZooViewController()
+    navigationController?.pushViewController(zooVC, animated: false)
   }
 }
