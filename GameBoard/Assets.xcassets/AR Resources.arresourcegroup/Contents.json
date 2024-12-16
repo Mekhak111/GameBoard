@@ -5,6 +5,15 @@
   },
   "resources" : [
     {
+      "filename" : "Cat.arreferenceimage"
+    },
+    {
+      "filename" : "Dog.arreferenceimage"
+    },
+    {
+      "filename" : "Tiger.arreferenceimage"
+    },
+    {
       "filename" : "bowlingAR.arreferenceimage"
     }
   ]
