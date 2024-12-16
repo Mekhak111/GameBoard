@@ -26,7 +26,7 @@ class BowlingViewController: UIViewController {
   private lazy var sceneView: ARSCNView = {
     let sceneView = ARSCNView()
     sceneView.translatesAutoresizingMaskIntoConstraints = false
-    sceneView.debugOptions = [.showWorldOrigin, .showFeaturePoints, .showPhysicsShapes]
+    //    sceneView.debugOptions = [.showWorldOrigin, .showFeaturePoints, .showPhysicsShapes]
     sceneView.delegate = self
     sceneView.session.delegate = self
     sceneView.scene.physicsWorld.contactDelegate = self
@@ -43,13 +43,15 @@ class BowlingViewController: UIViewController {
   }()
 
   private lazy var addPinsButton: UIButton = {
+    let image = UIImage(resource: .bowling)
     var config = UIButton.Configuration.filled()
-    config.image = UIImage(systemName: "plus.circle.fill")
+    config.image = image.resizedImage(targetSize: .init(width: 24, height: 24))
     config.baseBackgroundColor = .white
     config.baseForegroundColor = .black
     config.cornerStyle = .capsule
 
     let button = UIButton()
+    button.imageView?.contentMode = .scaleAspectFit
     button.translatesAutoresizingMaskIntoConstraints = false
     button.configuration = config
     button.heightAnchor.constraint(equalToConstant: 40).isActive = true
@@ -60,7 +62,8 @@ class BowlingViewController: UIViewController {
 
   private lazy var resetButton: UIButton = {
     var config = UIButton.Configuration.filled()
-    config.image = UIImage(systemName: "arrow.clockwise.circle.fill")
+    let image = UIImage(systemName: "arrow.clockwise.circle.fill") ?? UIImage()
+    config.image = image.resizedImage(targetSize: .init(width: 40, height: 40))
     config.baseBackgroundColor = .white
     config.baseForegroundColor = .black
     config.cornerStyle = .capsule
@@ -76,8 +79,8 @@ class BowlingViewController: UIViewController {
 
   private lazy var throwBallButton: UIButton = {
     var config = UIButton.Configuration.filled()
-    let image = UIImage()
-    config.image = UIImage(systemName: "figure.bowling.circle.fill")
+    let image = UIImage(systemName: "figure.bowling.circle.fill") ?? UIImage()
+    config.image = image.resizedImage(targetSize: .init(width: 50, height: 50))
     config.baseBackgroundColor = .white
     config.baseForegroundColor = .black
     config.cornerStyle = .capsule
@@ -85,9 +88,9 @@ class BowlingViewController: UIViewController {
     let button = UIButton()
     button.translatesAutoresizingMaskIntoConstraints = false
     button.configuration = config
-    button.heightAnchor.constraint(equalToConstant: 80).isActive = true
-    button.widthAnchor.constraint(equalToConstant: 80).isActive = true
-    button.addTarget(self, action: #selector(addBall), for: .touchUpInside)
+    button.heightAnchor.constraint(equalToConstant: 50).isActive = true
+    button.widthAnchor.constraint(equalToConstant: 50).isActive = true
+    button.addTarget(self, action: #selector(throwBall), for: .touchUpInside)
     return button
   }()
 
@@ -104,12 +107,28 @@ class BowlingViewController: UIViewController {
 
     setupSubViews()
     setupHandPoseDetection()
+    viewModel.isBallMovingDidChange = { [weak self] isBallMoving in
+      guard let self else { return }
+      DispatchQueue.main.async { [weak self] in
+        guard let self else { return }
+        throwBallButton.isEnabled = !isBallMoving
+        viewModel.hideShowLaser()
+      }
+    }
   }
 
   override func viewDidAppear(_ animated: Bool) {
     super.viewDidAppear(animated)
 
     viewModel.configuration.frameSemantics = .sceneDepth
+
+    if let referenceImages = ARReferenceImage.referenceImages(
+      inGroupNamed: "AR Resources", bundle: nil)
+    {
+      viewModel.configuration.detectionImages = referenceImages
+      viewModel.configuration.maximumNumberOfTrackedImages = 1
+    }
+
     sceneView.session.run(viewModel.configuration)
   }
 
@@ -142,6 +161,13 @@ class BowlingViewController: UIViewController {
       true
     infoLabel.leftAnchor.constraint(equalTo: sceneView.leftAnchor).isActive = true
     infoLabel.rightAnchor.constraint(equalTo: sceneView.rightAnchor).isActive = true
+    setupButtonsVisibility(isHidden: true)
+  }
+
+  private func setupButtonsVisibility(isHidden: Bool) {
+    resetButton.isHidden = isHidden
+    addPinsButton.isHidden = isHidden
+    throwBallButton.isHidden = isHidden
   }
 
   @objc private func reset() {
@@ -150,99 +176,15 @@ class BowlingViewController: UIViewController {
   }
 
   @objc private func createPins() {
-    let scene = SCNScene(named: "BowlingPin.scn")
-    viewModel.createPins(from: scene)
-    guard viewModel.gameFloor.childNode(withName: "givenBall", recursively: true) != nil else {
-      giveBall()
-      DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-        self.giveBall()
-      }
-      return
-    }
+    viewModel.createPins()
   }
 
-  @objc private func addBall() {
-    viewModel.removeGivenBallFromParent()
-    let scene = SCNScene(named: "Ball.scn")
-    guard let ball = scene?.rootNode.childNode(withName: "Ball", recursively: false),
-          let pinParent = viewModel.gameFloor.childNode(withName: "PinParent", recursively: true)
-    else { return }
-    
-    viewModel.isBallMoving = true
-    throwBallButton.isEnabled = !viewModel.isBallMoving
-    let gameFloorPosition = pinParent.position
-    let scale: Float = 0.05
-
-    ball.scale = .init(x: scale, y: scale, z: scale)
-    ball.position = SCNVector3(
-      gameFloorPosition.x + Float(randomNumber(firstNum: -1.5, secondNum: 1.5)),
-      0.2,
-      gameFloorPosition.z + 6
-    )
-    ball.pivot = SCNMatrix4MakeTranslation(
-      ball.boundingSphere.center.x / 2,
-      ball.boundingSphere.center.y / 2,
-      ball.boundingSphere.center.z / 2
-    )
-
-    let sphere = SCNSphere(radius: 0.02 * CGFloat(ball.boundingSphere.radius))
-    let updatedSphere = SCNNode(geometry: sphere)
-    let sphereShape = SCNPhysicsShape(geometry: updatedSphere.geometry!)
-
-    let physicsBody = SCNPhysicsBody(type: .dynamic, shape: sphereShape)
-    physicsBody.damping = 0.5
-    physicsBody.mass = 8
-    physicsBody.applyForce(.init(0, 0, -80), asImpulse: true)
-    physicsBody.contactTestBitMask = Bitmask.pin.rawValue
-    physicsBody.contactTestBitMask = Bitmask.finishFloor.rawValue | Bitmask.pin.rawValue
-    physicsBody.categoryBitMask = Bitmask.ball.rawValue
-    ball.physicsBody = physicsBody
-    ball.name = "givenBall"
-    ball.geometry?.firstMaterial?.diffuse.contents = viewModel.ballTexture  // viewModel.ballColor
-    pinParent.addChildNode(ball)
+  @objc private func throwBall() {
+    viewModel.throwBall()
   }
 
   @objc private func giveBall() {
-    let scene = SCNScene(named: "Ball.scn")
-    guard let ball = scene?.rootNode.childNode(withName: "Ball", recursively: false),
-      let startNode = viewModel.gameFloor.childNode(withName: "start", recursively: true)
-    else { return }
-
-    let ballPosition = startNode.position
-    let scale: Float = 0.05
-
-    ball.scale = .init(x: scale, y: scale, z: scale)
-    ball.position = SCNVector3(
-      ballPosition.x,
-      0,
-      ballPosition.z
-    )
-    ball.pivot = SCNMatrix4MakeTranslation(
-      ball.boundingSphere.center.x / 2,
-      ball.boundingSphere.center.y / 2,
-      ball.boundingSphere.center.z / 2
-    )
-
-    let sphere = SCNSphere(radius: 0.02 * CGFloat(ball.boundingSphere.radius))
-    let updatedSphere = SCNNode(geometry: sphere)
-    let sphereShape = SCNPhysicsShape(geometry: updatedSphere.geometry!)
-
-    let physicsBody = SCNPhysicsBody(type: .dynamic, shape: sphereShape)
-    physicsBody.damping = 0.5
-    physicsBody.mass = 3
-    physicsBody.contactTestBitMask = Bitmask.floor.rawValue
-    physicsBody.categoryBitMask = Bitmask.ball.rawValue
-    ball.physicsBody = physicsBody
-    ball.name = "givenBall00"
-    //    let randomColor = RandomColor.allCases.randomElement()?.color
-    let randomTexture = RandomTexture.allCases.randomElement()?.textureImage
-    ball.geometry?.firstMaterial?.diffuse.contents = randomTexture
-    startNode.addChildNode(ball)
-  }
-
-  private func randomNumber(firstNum: CGFloat, secondNum: CGFloat) -> CGFloat {
-    CGFloat(arc4random()) / CGFloat(UINT32_MAX) * abs(firstNum - secondNum)
-      + min(firstNum, secondNum)
+    viewModel.giveBall()
   }
 
   private func addPortal(planeAnchor: ARPlaneAnchor) {
@@ -327,12 +269,21 @@ extension BowlingViewController: ARSCNViewDelegate {
   func renderer(
     _ renderer: any SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor
   ) {
+    if !viewModel.isImageDetected, let imageAnchor = anchor as? ARImageAnchor {
+      guard let node = viewModel.recognizedImage(imageAnchor: imageAnchor) else { return }
+      sceneView.scene.rootNode.addChildNode(node)
+    }
+
     guard let planeAnchor = anchor as? ARPlaneAnchor else { return }
     print("Horizontal plane is detected...")
 
-    if !viewModel.isPlaced {
+    if !viewModel.isPlaced && viewModel.isImageDetected {
       addPortal(planeAnchor: planeAnchor)
       viewModel.isPlaced = true
+      viewModel.deleteDetectedImage(node: sceneView.scene.rootNode)
+      DispatchQueue.main.async { [weak self] in
+        self?.setupButtonsVisibility(isHidden: false)
+      }
     }
   }
 
@@ -345,40 +296,27 @@ extension BowlingViewController: SCNPhysicsContactDelegate {
     let nodeB = contact.nodeB
 
     if nodeA.physicsBody?.categoryBitMask == Bitmask.ball.rawValue {
-      if nodeB.physicsBody?.categoryBitMask == Bitmask.floor.rawValue {
-        print("NodeB is \(nodeB.name ?? "No name")")
-        nodeA.physicsBody?.applyForce(.init(0, 0, 0.5), asImpulse: true)
-      } else if nodeB.physicsBody?.categoryBitMask == Bitmask.pin.rawValue {
-        print("NodeB is \(nodeB.name ?? "No name")")
-        print("Pin Collision detected...")
-      } else if nodeB.physicsBody?.categoryBitMask == Bitmask.finishFloor.rawValue {
-        print("Finish floor....")
-        ballFallingDetected(nodeA)
-      }
+      detectBallCollision(first: nodeA, second: nodeB)
     } else if nodeB.physicsBody?.categoryBitMask == Bitmask.ball.rawValue {
-      if nodeA.physicsBody?.categoryBitMask == Bitmask.floor.rawValue {
-        print("NodeA is \(nodeA.name ?? "No name")")
-        nodeB.physicsBody?.applyForce(.init(0, 0, 0.5), asImpulse: true)
-      } else if nodeA.physicsBody?.categoryBitMask == Bitmask.pin.rawValue {
-        print("NodeA is \(nodeA.name ?? "No name")")
-        print("Pin Collision detected...")
-      } else if nodeA.physicsBody?.categoryBitMask == Bitmask.finishFloor.rawValue {
-        print("Finish floor....")
-        ballFallingDetected(nodeB)
-      }
+      detectBallCollision(first: nodeB, second: nodeA)
     }
   }
 
-  private func ballFallingDetected(_ node: SCNNode) {
-    viewModel.canThrowBall = true
-    viewModel.isBallMoving = false
-    DispatchQueue.main.async {
-      self.throwBallButton.isEnabled = !self.viewModel.isBallMoving
+  func physicsWorld(_ world: SCNPhysicsWorld, didUpdate contact: SCNPhysicsContact) {
+    DispatchQueue.main.async { [weak self] in
+      guard let self else { return }
+      viewModel.checkFallenPins()
     }
-    node.removeFromParentNode()
-    if !viewModel.isBallMoving && viewModel.canThrowBall {
-      giveBall()
-      viewModel.canThrowBall = false
+  }
+
+  private func detectBallCollision(first: SCNNode, second: SCNNode) {
+    if second.physicsBody?.categoryBitMask == Bitmask.floor.rawValue {
+      first.physicsBody?.applyForce(.init(0, 0, 0.5), asImpulse: true)
+    } else if second.physicsBody?.categoryBitMask == Bitmask.pin.rawValue {
+      print("\(second.name ?? "") Pin Collision detected...")
+    } else if second.physicsBody?.categoryBitMask == Bitmask.finishFloor.rawValue {
+      print("Finish floor....")
+      viewModel.ballFallingDetected(first)
     }
   }
 
@@ -413,13 +351,13 @@ extension BowlingViewController: ARSessionDelegate {
     if gestureManager.detectOpenHandGesture(from: observation) {
       viewModel.canThrowBall = true
       if !viewModel.isBallMoving && viewModel.canThrowBall {
-        addBall()
+        throwBall()
         viewModel.canThrowBall = false
       }
     } else {
       print("Unknown gesture Detected...")
     }
-    
+
     // gestureDidUpdate(observation)
   }
 

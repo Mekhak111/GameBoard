@@ -22,3 +22,12 @@ func printPhysicsBodies(of node: SCNNode) {
     print(" - Is Affected By Gravity: \(physicsBody.isAffectedByGravity)")
   }
 }
+
+func printChildNodes(of node: SCNNode) {
+  for child in node.childNodes {
+    print("Node: \(child.name ?? "Unnamed")")
+    print(" - Position: \(child.position)")
+    print(" - Rotation: \(child.rotation), currentRotation: \(child.presentation.rotation) ")
+    printChildNodes(of: child)
+  }
+}

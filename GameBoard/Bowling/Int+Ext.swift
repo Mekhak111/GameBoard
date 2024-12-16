@@ -11,3 +11,9 @@ extension Int {
   var degreesToRadians: Double { Double(self) * .pi / 180 }
 
 }
+
+extension Float {
+
+  var radianToDegree: Double { Double(self * 180 / .pi) }
+
+}
