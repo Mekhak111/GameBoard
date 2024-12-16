@@ -55,3 +55,20 @@ extension SCNNode {
 func + (left: SCNVector3, right: SCNVector3) -> SCNVector3 {
   SCNVector3Make(left.x + right.x, left.y + right.y, left.z + right.z)
 }
+
+func == (left: SCNVector3, right: SCNVector3) -> Bool {
+  left.x == right.x && left.y == right.y && left.z == right.z
+}
+
+func != (left: SCNVector3, right: SCNVector3) -> Bool {
+  left.x != right.x || left.y != right.y || left.z != right.z
+}
+
+func != (left: SCNVector4, right: SCNVector4) -> Bool {
+  left.x != right.x || left.y != right.y || left.z != right.z || left.w != right.w
+}
+
+func randomNumber(firstNum: CGFloat, secondNum: CGFloat) -> CGFloat {
+  CGFloat(arc4random()) / CGFloat(UINT32_MAX) * abs(firstNum - secondNum)
+    + min(firstNum, secondNum)
+}
