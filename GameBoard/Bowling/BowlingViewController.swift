@@ -6,6 +6,7 @@
 //
 
 import ARKit
+import SwiftUI
 import UIKit
 
 enum Bitmask: Int {
@@ -25,7 +26,7 @@ class BowlingViewController: UIViewController {
   private lazy var sceneView: ARSCNView = {
     let sceneView = ARSCNView()
     sceneView.translatesAutoresizingMaskIntoConstraints = false
-//    sceneView.debugOptions = [.showWorldOrigin, .showFeaturePoints, .showPhysicsShapes]
+    //    sceneView.debugOptions = [.showWorldOrigin, .showFeaturePoints, .showPhysicsShapes]
     sceneView.delegate = self
     sceneView.session.delegate = self
     sceneView.scene.physicsWorld.contactDelegate = self
@@ -42,13 +43,15 @@ class BowlingViewController: UIViewController {
   }()
 
   private lazy var addPinsButton: UIButton = {
+    let image = UIImage(resource: .bowling)
     var config = UIButton.Configuration.filled()
-    config.image = UIImage(systemName: "plus.circle.fill")
+    config.image = image.resizedImage(targetSize: .init(width: 24, height: 24))
     config.baseBackgroundColor = .white
     config.baseForegroundColor = .black
     config.cornerStyle = .capsule
 
     let button = UIButton()
+    button.imageView?.contentMode = .scaleAspectFit
     button.translatesAutoresizingMaskIntoConstraints = false
     button.configuration = config
     button.heightAnchor.constraint(equalToConstant: 40).isActive = true
@@ -59,7 +62,8 @@ class BowlingViewController: UIViewController {
 
   private lazy var resetButton: UIButton = {
     var config = UIButton.Configuration.filled()
-    config.image = UIImage(systemName: "arrow.clockwise.circle.fill")
+    let image = UIImage(systemName: "arrow.clockwise.circle.fill") ?? UIImage()
+    config.image = image.resizedImage(targetSize: .init(width: 40, height: 40))
     config.baseBackgroundColor = .white
     config.baseForegroundColor = .black
     config.cornerStyle = .capsule
@@ -75,8 +79,8 @@ class BowlingViewController: UIViewController {
 
   private lazy var throwBallButton: UIButton = {
     var config = UIButton.Configuration.filled()
-    let image = UIImage()
-    config.image = UIImage(systemName: "figure.bowling.circle.fill")
+    let image = UIImage(systemName: "figure.bowling.circle.fill") ?? UIImage()
+    config.image = image.resizedImage(targetSize: .init(width: 50, height: 50))
     config.baseBackgroundColor = .white
     config.baseForegroundColor = .black
     config.cornerStyle = .capsule
@@ -84,8 +88,8 @@ class BowlingViewController: UIViewController {
     let button = UIButton()
     button.translatesAutoresizingMaskIntoConstraints = false
     button.configuration = config
-    button.heightAnchor.constraint(equalToConstant: 80).isActive = true
-    button.widthAnchor.constraint(equalToConstant: 80).isActive = true
+    button.heightAnchor.constraint(equalToConstant: 50).isActive = true
+    button.widthAnchor.constraint(equalToConstant: 50).isActive = true
     button.addTarget(self, action: #selector(throwBall), for: .touchUpInside)
     return button
   }()
@@ -117,6 +121,14 @@ class BowlingViewController: UIViewController {
     super.viewDidAppear(animated)
 
     viewModel.configuration.frameSemantics = .sceneDepth
+
+    if let referenceImages = ARReferenceImage.referenceImages(
+      inGroupNamed: "AR Resources", bundle: nil)
+    {
+      viewModel.configuration.detectionImages = referenceImages
+      viewModel.configuration.maximumNumberOfTrackedImages = 1
+    }
+
     sceneView.session.run(viewModel.configuration)
   }
 
@@ -149,6 +161,13 @@ class BowlingViewController: UIViewController {
       true
     infoLabel.leftAnchor.constraint(equalTo: sceneView.leftAnchor).isActive = true
     infoLabel.rightAnchor.constraint(equalTo: sceneView.rightAnchor).isActive = true
+    setupButtonsVisibility(isHidden: true)
+  }
+
+  private func setupButtonsVisibility(isHidden: Bool) {
+    resetButton.isHidden = isHidden
+    addPinsButton.isHidden = isHidden
+    throwBallButton.isHidden = isHidden
   }
 
   @objc private func reset() {
@@ -250,12 +269,21 @@ extension BowlingViewController: ARSCNViewDelegate {
   func renderer(
     _ renderer: any SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor
   ) {
+    if !viewModel.isImageDetected, let imageAnchor = anchor as? ARImageAnchor {
+      guard let node = viewModel.recognizedImage(imageAnchor: imageAnchor) else { return }
+      sceneView.scene.rootNode.addChildNode(node)
+    }
+
     guard let planeAnchor = anchor as? ARPlaneAnchor else { return }
     print("Horizontal plane is detected...")
 
-    if !viewModel.isPlaced {
+    if !viewModel.isPlaced && viewModel.isImageDetected {
       addPortal(planeAnchor: planeAnchor)
       viewModel.isPlaced = true
+      viewModel.deleteDetectedImage(node: sceneView.scene.rootNode)
+      DispatchQueue.main.async { [weak self] in
+        self?.setupButtonsVisibility(isHidden: false)
+      }
     }
   }
 
@@ -273,7 +301,7 @@ extension BowlingViewController: SCNPhysicsContactDelegate {
       detectBallCollision(first: nodeB, second: nodeA)
     }
   }
-  
+
   func physicsWorld(_ world: SCNPhysicsWorld, didUpdate contact: SCNPhysicsContact) {
     DispatchQueue.main.async { [weak self] in
       guard let self else { return }
@@ -343,7 +371,6 @@ extension BowlingViewController: ARSessionDelegate {
     case .unlike: print("👎")
     case .unknown: print("❓")
     }
-    
   }
 
 }

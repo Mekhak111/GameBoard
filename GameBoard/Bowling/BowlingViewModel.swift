@@ -26,6 +26,7 @@ class BowlingViewModel {
   var sideWallPlane: SCNPlane?
   var gameFloor = SCNNode()
   var isPlaced: Bool = false
+  var isImageDetected: Bool = false
   var isArenaAdded: Bool = false
   var canThrowBall: Bool = true
   var ballColor: UIColor = .red
@@ -237,6 +238,86 @@ class BowlingViewModel {
         node.removeFromParentNode()
       }
     }
+  }
+  
+  func hideShowLaser() {
+    guard let laserNode = gameFloor.childNode(withName: "Laser", recursively: true)
+    else { return }
+    
+    laserNode.isHidden = isBallMoving
+  }
+  
+  func recognizedImage(imageAnchor: ARImageAnchor) -> SCNNode? {
+    let transform = imageAnchor.transform
+    let position = SIMD3<Float>(
+      transform.columns.3.x,
+      transform.columns.3.y,
+      transform.columns.3.z
+    )
+
+    let textScn = SCNText()
+    textScn.extrusionDepth = 0.01
+    textScn.firstMaterial?.diffuse.contents = UIColor.green
+    textScn.firstMaterial?.isDoubleSided = true
+    textScn.chamferRadius = CGFloat(0.01)
+    
+    let text = "Image \nwas \nrecognized"
+
+    let paragraphStyle = NSMutableParagraphStyle()
+    paragraphStyle.alignment = .center
+    paragraphStyle.lineSpacing = 0.12
+
+    let attributes: [NSAttributedString.Key: Any] = [
+      .font: UIFont(name: "Futura", size: 0.15) ?? UIFont.systemFont(ofSize: 0.15),
+      .foregroundColor: UIColor.green,
+      .paragraphStyle: paragraphStyle
+    ]
+
+    let attributedText = NSAttributedString(string: text, attributes: attributes)
+    textScn.string = attributedText
+
+    let (minBound, maxBound) = textScn.boundingBox
+    let textNode = SCNNode(geometry: textScn)
+    textNode.pivot = SCNMatrix4MakeTranslation(
+      (maxBound.x - minBound.x) / 2,
+      minBound.y,
+      0.01 / 2
+    )
+    textNode.scale = SCNVector3Make(0.2, 0.2, 0.2)
+
+    let plane = SCNPlane(
+      width: imageAnchor.referenceImage.physicalSize.width,
+      height: imageAnchor.referenceImage.physicalSize.height
+    )
+    plane.firstMaterial?.diffuse.contents = UIColor.clear
+    let planeNode = SCNNode(geometry: plane)
+    planeNode.position = .init(position.x, position.y, position.z)
+    planeNode.addChildNode(textNode)
+
+    guard let detectedImage = imageAnchor.referenceImage.name else {
+      print("I can't detect Image")
+      return nil
+    }
+    print(" \(detectedImage) image was recognized")
+
+    let scaleOutAction = SCNAction.scale(to: 0.3, duration: 1)
+    let scaleInAction = SCNAction.scale(to: 0.2, duration: 1)
+    let arrayOfActions = [scaleOutAction, scaleInAction]
+    let repeatedArray = Array(repeating: arrayOfActions, count: 4).flatMap { $0 }
+    let sequenceAction = SCNAction.sequence(repeatedArray)
+    
+    textNode.runAction(sequenceAction) { [weak self] in
+      guard let self else { return }
+      isImageDetected = true
+    }
+    planeNode.name = "detectedImage"
+    return planeNode
+  }
+  
+  func deleteDetectedImage(node: SCNNode) {
+    guard let detectedImage = node.childNode(withName: "detectedImage", recursively: true) else { return }
+    
+    detectedImage.removeFromParentNode()
   }
 
   private func createPins(from scene: SCNScene?) {
@@ -470,13 +551,6 @@ class BowlingViewModel {
     let repeatForever = SCNAction.repeatForever(sequence)
     
     node.runAction(repeatForever)
-  }
-  
-  func hideShowLaser() {
-    guard let laserNode = gameFloor.childNode(withName: "Laser", recursively: true)
-    else { return }
-    
-    laserNode.isHidden = isBallMoving
   }
 
 }
