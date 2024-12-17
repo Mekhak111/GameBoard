@@ -28,7 +28,6 @@ class ZooViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate 
       configuration.detectionImages = referenceImages
     }
     
-    arView.debugOptions = [.showFeaturePoints]
     arView.session.run(configuration)
   }
   
