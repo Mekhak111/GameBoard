@@ -26,7 +26,6 @@ class BowlingViewController: UIViewController {
   private lazy var sceneView: ARSCNView = {
     let sceneView = ARSCNView()
     sceneView.translatesAutoresizingMaskIntoConstraints = false
-    //    sceneView.debugOptions = [.showWorldOrigin, .showFeaturePoints, .showPhysicsShapes]
     sceneView.delegate = self
     sceneView.session.delegate = self
     sceneView.scene.physicsWorld.contactDelegate = self

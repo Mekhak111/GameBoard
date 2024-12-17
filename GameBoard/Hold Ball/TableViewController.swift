@@ -45,7 +45,6 @@ class TableViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegat
     arView.delegate = self
     arView.session.delegate = self
     let configuration = ARWorldTrackingConfiguration()
-    arView.debugOptions = [.showPhysicsShapes]
     arView.session.run(configuration)
     arView.scene.physicsWorld.contactDelegate = self
     arView.autoenablesDefaultLighting = true

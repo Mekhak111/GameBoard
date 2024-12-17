@@ -62,7 +62,7 @@ class NumberViewController: UIViewController, ARSessionDelegate {
     analyzeButton.addTarget(self, action: #selector(analyzeTapped), for: .touchUpInside)
     
   }
-
+  
   private func processFrame() {
     arView.isOpaque = false
     let temp = arView.scene.background.contents
@@ -119,7 +119,7 @@ class NumberViewController: UIViewController, ARSessionDelegate {
 
 extension NumberViewController: ARSCNViewDelegate {
   
-   func renderer(_ renderer: any SCNSceneRenderer, willRenderScene scene: SCNScene, atTime time: TimeInterval) {
+  func renderer(_ renderer: any SCNSceneRenderer, willRenderScene scene: SCNScene, atTime time: TimeInterval) {
     
     guard let pointOFView = arView.pointOfView else { return }
     let transform = pointOFView.transform

@@ -25,7 +25,6 @@ class PlaneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     startARSession()
   }
   
-  // Setup ARSCNView
   func setupSceneView() {
     sceneView = ARSCNView(frame: view.frame)
     sceneView.autoenablesDefaultLighting = true
@@ -34,7 +33,6 @@ class PlaneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     
     sceneView.delegate = self
     sceneView.session.delegate = self
-    sceneView.debugOptions = [.showFeaturePoints]
     DispatchQueue.main.async {
       self.createPLane(at: SCNVector3(0, 0, -2))
       let circle = SCNNode(geometry: SCNTorus(ringRadius: 0.6, pipeRadius: 0.1))
@@ -45,7 +43,6 @@ class PlaneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     }
   }
   
-  // Setup Hand Pose Detection with Vision
   func setupHandPoseDetection() {
     handPoseRequest = VNDetectHumanHandPoseRequest()
     handPoseRequest.maximumHandCount = 1
@@ -55,12 +52,10 @@ class PlaneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     sceneView.session.run(configuration)
   }
   
-  // Start AR session
   func startARSession() {
     sceneView.session.delegate = self
   }
   
-  // Detect hand poses from AR session frames
   func detectHands(pixelBuffer: CVPixelBuffer) {
     let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, options: [:])
     
@@ -78,18 +73,15 @@ class PlaneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     }
   }
   
-  // Process detected hand pose and extract index finger tip position
   func processHandPose(_ observation: VNHumanHandPoseObservation) {
     handlePinchGesture(observation: observation)
   }
   
-  // Handle AR session frame updates
   func session(_ session: ARSession, didUpdate frame: ARFrame) {
     let pixelBuffer = frame.capturedImage //else { return }
     detectHands(pixelBuffer: pixelBuffer)
   }
   
-  // Create a Box in AR
   func createPLane(at position: SCNVector3) {
     let scene = SCNScene(named: "Plane.scn")
     guard let plane = scene?.rootNode.childNode(withName: "Plane", recursively: false) else { return }
@@ -103,7 +95,6 @@ class PlaneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     sceneView.scene.rootNode.addChildNode(planeNode!)
   }
   
-  // Add AR session delegate method to handle AR updates
   func session(_ session: ARSession, didFailWithError error: Error) {
     print("AR session failed with error: \(error.localizedDescription)")
   }
@@ -134,5 +125,5 @@ class PlaneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
       planeNode?.physicsBody?.clearAllForces()
     }
   }
-
+  
 }

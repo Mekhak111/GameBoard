@@ -69,7 +69,6 @@ class GestureManager {
       let ring = try observation.recognizedPoints(.ringFinger)
       let pinky = try observation.recognizedPoints(.littleFinger)
 
-      // Ensure points are valid and have a confidence > 0.5
       guard let thumbTip = thumb[.thumbTip]?.location, thumb[.thumbTip]?.confidence ?? 0 > 0.5,
         let indexTip = index[.indexTip]?.location, index[.indexTip]?.confidence ?? 0 > 0.5,
         let middleTip = middle[.middleTip]?.location, middle[.middleTip]?.confidence ?? 0 > 0.5,
@@ -83,19 +82,15 @@ class GestureManager {
         return false
       }
 
-      // Check if index and middle fingers are extended
       let indexExtended = distance(from: indexTip, to: indexMCP) > 0.3
       let middleExtended = distance(from: middleTip, to: middleMCP) > 0.3
 
-      // Check if thumb, ring, and pinky fingers are curled
       let thumbCurled = distance(from: thumbTip, to: thumb[.thumbMP]!.location) < 0.2
       let ringCurled = distance(from: ringTip, to: ringMCP) < 0.2
       let pinkyCurled = distance(from: pinkyTip, to: pinkyMCP) < 0.2
 
-      // Check if the index and middle tips are separated
       let fingersSeparated = distance(from: indexTip, to: middleTip) > 0.1
 
-      // Victory gesture: index and middle fingers extended and separated, others curled
       return indexExtended && middleExtended && fingersSeparated && thumbCurled && ringCurled
         && pinkyCurled
     } catch {
@@ -106,14 +101,12 @@ class GestureManager {
 
   func detectThumbsUpGesture(from observation: VNHumanHandPoseObservation) -> Bool {
     do {
-      // Get recognized points for the thumb and all fingers
       let thumb = try observation.recognizedPoints(.thumb)
       let index = try observation.recognizedPoints(.indexFinger)
       let middle = try observation.recognizedPoints(.middleFinger)
       let ring = try observation.recognizedPoints(.ringFinger)
       let pinky = try observation.recognizedPoints(.littleFinger)
 
-      // Ensure points are valid and have sufficient confidence
       guard let thumbTip = thumb[.thumbTip]?.location, thumb[.thumbTip]?.confidence ?? 0 > 0.5,
         let thumbMP = thumb[.thumbMP]?.location, thumb[.thumbMP]?.confidence ?? 0 > 0.5,
         let indexTip = index[.indexTip]?.location, index[.indexTip]?.confidence ?? 0 > 0.5,
@@ -128,19 +121,15 @@ class GestureManager {
         return false
       }
 
-      // Check if thumb is extended
       let thumbExtended = distance(from: thumbTip, to: thumbMP) > 0.03
 
-      // Check if other fingers are curled
       let indexCurled = distance(from: indexTip, to: indexMCP) < 0.2
       let middleCurled = distance(from: middleTip, to: middleMCP) < 0.2
       let ringCurled = distance(from: ringTip, to: ringMCP) < 0.2
       let pinkyCurled = distance(from: pinkyTip, to: pinkyMCP) < 0.2
 
-      // Optional: Check thumb is higher than the other fingers
       let thumbAboveOthers = thumbTip.y < min(indexTip.y, middleTip.y, ringTip.y, pinkyTip.y)
 
-      // Thumbs up: thumb extended and above others, other fingers curled
       return thumbExtended && thumbAboveOthers && indexCurled && middleCurled && ringCurled
         && pinkyCurled
     } catch {
@@ -151,14 +140,12 @@ class GestureManager {
 
   func detectOpenHandGesture(from observation: VNHumanHandPoseObservation) -> Bool {
     do {
-      // Get recognized points for each finger
       let thumb = try observation.recognizedPoints(.thumb)
       let index = try observation.recognizedPoints(.indexFinger)
       let middle = try observation.recognizedPoints(.middleFinger)
       let ring = try observation.recognizedPoints(.ringFinger)
       let pinky = try observation.recognizedPoints(.littleFinger)
 
-      // Ensure points are valid and have sufficient confidence
       guard let thumbTip = thumb[.thumbTip]?.location, thumb[.thumbTip]?.confidence ?? 0 > 0.5,
         let indexTip = index[.indexTip]?.location, index[.indexTip]?.confidence ?? 0 > 0.5,
         let middleTip = middle[.middleTip]?.location, middle[.middleTip]?.confidence ?? 0 > 0.5,
@@ -173,14 +160,12 @@ class GestureManager {
         return false
       }
 
-      // Check if all fingers are extended
       let thumbExtended = distance(from: thumbTip, to: thumbMP) > 0.05
       let indexExtended = distance(from: indexTip, to: indexMCP) > 0.05
       let middleExtended = distance(from: middleTip, to: middleMCP) > 0.05
       let ringExtended = distance(from: ringTip, to: ringMCP) > 0.05
       let pinkyExtended = distance(from: pinkyTip, to: pinkyMCP) > 0.05
 
-      // Check if fingers are spread apart
       let thumbToIndex = distance(from: thumbTip, to: indexTip)
       let indexToMiddle = distance(from: indexTip, to: middleTip)
       let middleToRing = distance(from: middleTip, to: ringTip)
@@ -189,7 +174,6 @@ class GestureManager {
       let fingersSpread =
         thumbToIndex > 0.05 && indexToMiddle > 0.05 && middleToRing > 0.05 && ringToPinky > 0.05
 
-      // Open hand gesture: all fingers extended and spread
       return thumbExtended && indexExtended && middleExtended && ringExtended && pinkyExtended
         && fingersSpread
     } catch {
@@ -200,14 +184,12 @@ class GestureManager {
 
   func detectClosedHandGesture(from observation: VNHumanHandPoseObservation) -> Bool {
     do {
-      // Get recognized points for each finger
       let thumb = try observation.recognizedPoints(.thumb)
       let index = try observation.recognizedPoints(.indexFinger)
       let middle = try observation.recognizedPoints(.middleFinger)
       let ring = try observation.recognizedPoints(.ringFinger)
       let pinky = try observation.recognizedPoints(.littleFinger)
 
-      // Ensure points are valid and have sufficient confidence
       guard let thumbTip = thumb[.thumbTip]?.location, thumb[.thumbTip]?.confidence ?? 0 > 0.5,
         let indexTip = index[.indexTip]?.location, index[.indexTip]?.confidence ?? 0 > 0.5,
         let middleTip = middle[.middleTip]?.location, middle[.middleTip]?.confidence ?? 0 > 0.5,
@@ -222,16 +204,13 @@ class GestureManager {
         return false
       }
 
-      // Check if all fingers are curled
       let indexCurled = distance(from: indexTip, to: indexMCP) < 0.02
       let middleCurled = distance(from: middleTip, to: middleMCP) < 0.02
       let ringCurled = distance(from: ringTip, to: ringMCP) < 0.02
       let pinkyCurled = distance(from: pinkyTip, to: pinkyMCP) < 0.02
 
-      // Check if the thumb is curled or extended (optional)
       let thumbExtended = distance(from: thumbTip, to: thumbMP) > 0.03
 
-      // A closed hand gesture: index, middle, ring, and pinky fingers curled, and thumb could be extended or curled
       return indexCurled && middleCurled && ringCurled && pinkyCurled
         && (thumbExtended || !indexCurled)
     } catch {
@@ -245,7 +224,6 @@ class GestureManager {
   }
 
   func detectGesture(observation: VNHumanHandPoseObservation) -> Gesture {
-    // Get landmarks for the hand
     guard let thumbTip = try? observation.recognizedPoint(.thumbTip),
       let indexTip = try? observation.recognizedPoint(.indexTip),
       let middleTip = try? observation.recognizedPoint(.middleTip),
@@ -256,18 +234,15 @@ class GestureManager {
       return .unknown
     }
 
-    // Ensure all landmarks have a valid confidence level
     let points = [thumbTip, indexTip, middleTip, ringTip, littleTip, wrist]
     guard points.allSatisfy({ $0.confidence > 0.3 }) else {
       return .unknown
     }
 
-    // Relative positions for gestures
     let thumbToIndexDistance = thumbTip.location.distance(to: indexTip.location)
     let thumbToMiddleDistance = thumbTip.location.distance(to: middleTip.location)
     let thumbToWristDistance = thumbTip.location.distance(to: wrist.location)
 
-    // Gesture detection
     if thumbToIndexDistance < 0.1 && thumbToMiddleDistance < 0.1 {
       return .closedHand
     } else if thumbToWristDistance > 0.3 {

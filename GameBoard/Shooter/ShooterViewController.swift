@@ -57,7 +57,6 @@ class ShooterViewController: UIViewController, ARSessionDelegate, ARSCNViewDeleg
     
     arView.delegate = self
     arView.session.delegate = self
-    arView.debugOptions = [.showFeaturePoints]
     arView.scene.physicsWorld.contactDelegate = self
   }
   

@@ -15,8 +15,6 @@ class MaskViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate
   private var selectedMask: String = ""
   private let masks = ["Bone.scn", "Joker.scn", "Devil.scn", "WoodTexture", "Grass", "Rainbow"]
   
-  
-  
   override func viewDidLoad() {
     super.viewDidLoad()
     setupARView()
