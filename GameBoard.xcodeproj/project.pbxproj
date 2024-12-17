@@ -147,7 +147,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = W6NNYLPY8M;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = GameBoard/Info.plist;
+				INFOPLIST_FILE = GameBoard/Resources/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Allow this app to access your camera to augment your reality.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
