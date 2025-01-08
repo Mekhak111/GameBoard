@@ -46,7 +46,6 @@ class ViewController: UIViewController {
       ("Mask", UIColor.systemYellow, #selector(maskButtonTapped)),
       ("Shooter", UIColor.systemBlue, #selector(shooterButtonTapped)),
       ("Body", UIColor.orange, #selector(bodyButtonTapped)),
-      ("Number", UIColor.systemPink, #selector(numberButtonTapped)),
       ("Face", UIColor.systemMint, #selector(faceButtonTapped)),
       ("Obstacles", UIColor.magenta, #selector(obstaclesButtonTapped)),
       ("Table", UIColor.purple, #selector(tableButtonTapped)),

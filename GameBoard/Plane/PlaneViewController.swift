@@ -35,11 +35,6 @@ class PlaneViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegat
     sceneView.session.delegate = self
     DispatchQueue.main.async {
       self.createPLane(at: SCNVector3(0, 0, -2))
-      let circle = SCNNode(geometry: SCNTorus(ringRadius: 0.6, pipeRadius: 0.1))
-      circle.geometry?.firstMaterial?.diffuse.contents = UIColor.red
-      circle.position = SCNVector3(0, 0, -3)
-      circle.eulerAngles = SCNVector3(90.degreesToRadians, 0, 0)
-      self.sceneView.scene.rootNode.addChildNode(circle)
     }
   }
   
