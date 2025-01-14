@@ -25,9 +25,10 @@ class FaceViewController: UIViewController, ARSessionDelegate {
     startARSession()
     setUpText()
   }
+  
   func setUpText() {
     textNode.geometry?.firstMaterial?.diffuse.contents = UIColor.white
-    textNode.scale = SCNVector3(0.01, 0.01, 0.01)
+    textNode.scale = SCNVector3(0.005, 0.005, 0.005)
     arView.scene.rootNode.addChildNode(textNode)
   }
   
@@ -71,7 +72,7 @@ class FaceViewController: UIViewController, ARSessionDelegate {
     guard let pointOFView = arView.pointOfView else { return }
     let transform = pointOFView.transform
     let orientation = SCNVector3(-transform.m31 , -transform.m32, -transform.m33 )
-    let location = SCNVector3(transform.m41, transform.m42, transform.m43)
+    let location = SCNVector3(transform.m41 - 0.3, transform.m42, transform.m43)
     let position = location + orientation
     textNode.position = position
   }

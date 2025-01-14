@@ -12,11 +12,12 @@ class MaskViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate
   
   private var arView: ARSCNView!
   private var pickerView: UIPickerView!
-  private var selectedMask: String = ""
+  private var selectedMask: String = "Bone.scn"
   private let masks = ["Bone.scn", "Joker.scn", "Devil.scn", "WoodTexture", "Grass", "Rainbow"]
   
   override func viewDidLoad() {
     super.viewDidLoad()
+    
     setupARView()
     setupPickerView()
   }
@@ -105,7 +106,7 @@ extension MaskViewController: UIPickerViewDelegate, UIPickerViewDataSource {
   }
   
   func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
-    return masks[row]
+    masks[row]
   }
   
   func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
