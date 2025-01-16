@@ -15,10 +15,11 @@ class FaceViewController: UIViewController, ARSessionDelegate {
   var arView: ARSCNView!
   let textNode = SCNNode(geometry: SCNText(string: "", extrusionDepth: 0.1))
   
-  let genderModel = GenderClassifier_1()
+  let genderModel = GenderClassifier()
   
   override func viewDidLoad() {
     super.viewDidLoad()
+    
     arView = ARSCNView(frame: self.view.bounds)
     self.view.addSubview(arView)
     arView.session.delegate = self
@@ -53,8 +54,12 @@ class FaceViewController: UIViewController, ARSessionDelegate {
       let request = VNCoreMLRequest(model: visionModel) { [weak self] request, error in
         guard let results = request.results as? [VNClassificationObservation] else { return }
         if let topResult = results.first {
-          DispatchQueue.main.async {
-            self?.displayResult("\(topResult.identifier): \(Int(topResult.confidence * 100))%")
+          if topResult.confidence > 0.9  {
+            DispatchQueue.main.async {
+              let detectedFaceText = "\(topResult.identifier): \(Int(topResult.confidence * 100))%"
+              let text = topResult.identifier == "Background" ? "" : detectedFaceText
+              self?.displayResult(text)
+            }
           }
         }
       }
