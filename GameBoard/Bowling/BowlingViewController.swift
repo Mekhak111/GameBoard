@@ -269,8 +269,9 @@ extension BowlingViewController: ARSCNViewDelegate {
     _ renderer: any SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor
   ) {
     if !viewModel.isImageDetected, let imageAnchor = anchor as? ARImageAnchor {
-      guard let node = viewModel.recognizedImage(imageAnchor: imageAnchor) else { return }
-      sceneView.scene.rootNode.addChildNode(node)
+      guard let recognizedNode = viewModel.recognizedImage(imageAnchor: imageAnchor) else { return }
+      
+      sceneView.scene.rootNode.addChildNode(recognizedNode)
     }
 
     guard let planeAnchor = anchor as? ARPlaneAnchor else { return }

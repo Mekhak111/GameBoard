@@ -22,42 +22,50 @@ class GestureManager {
   
   func detectPinchGesture(observation: VNHumanHandPoseObservation) -> Bool {
     guard let thumbTip = try? observation.recognizedPoints(.thumb)[.thumbTip],
-      let indexTip = try? observation.recognizedPoints(.indexFinger)[.indexTip]
+      let indexTip = try? observation.recognizedPoints(.indexFinger)[.indexTip],
+      thumbTip.confidence > 0.3, // Check if the points are reliable
+      indexTip.confidence > 0.3
     else { return false }
 
-    let distance = hypot(thumbTip.x - indexTip.x, thumbTip.y - indexTip.y)
+    let distance = hypotl(thumbTip.x - indexTip.x, thumbTip.y - indexTip.y)
 
-    return distance < 0.05
+    return distance < 0.02
   }
 
   func detectPinchWithMiddleGesture(observation: VNHumanHandPoseObservation) -> Bool {
     guard let thumbTip = try? observation.recognizedPoints(.thumb)[.thumbTip],
-      let midTIp = try? observation.recognizedPoints(.middleFinger)[.middleTip]
+      let midTip = try? observation.recognizedPoints(.middleFinger)[.middleTip],
+          thumbTip.confidence > 0.3, // Check if the points are reliable
+          midTip.confidence > 0.3
     else { return false }
 
-    let distance = hypot(thumbTip.x - midTIp.x, thumbTip.y - midTIp.y)
+    let distance = hypotl(thumbTip.x - midTip.x, thumbTip.y - midTip.y)
 
-    return distance < 0.05
+    return distance < 0.02
   }
 
   func detectPinchWithRingGesture(observation: VNHumanHandPoseObservation) -> Bool {
     guard let thumbTip = try? observation.recognizedPoints(.thumb)[.thumbTip],
-      let ringTIp = try? observation.recognizedPoints(.ringFinger)[.ringTip]
+      let ringTip = try? observation.recognizedPoints(.ringFinger)[.ringTip],
+          thumbTip.confidence > 0.3, // Check if the points are reliable
+          ringTip.confidence > 0.3
     else { return false }
 
-    let distance = hypot(thumbTip.x - ringTIp.x, thumbTip.y - ringTIp.y)
+    let distance = hypotl(thumbTip.x - ringTip.x, thumbTip.y - ringTip.y)
 
-    return distance < 0.05
+    return distance < 0.02
   }
 
   func detectPinchWithLittleGesture(observation: VNHumanHandPoseObservation) -> Bool {
     guard let thumbTip = try? observation.recognizedPoints(.thumb)[.thumbTip],
-      let littleTip = try? observation.recognizedPoints(.littleFinger)[.littleTip]
+      let littleTip = try? observation.recognizedPoints(.littleFinger)[.littleTip],
+          thumbTip.confidence > 0.3, // Check if the points are reliable
+          littleTip.confidence > 0.3
     else { return false }
 
-    let distance = hypot(thumbTip.x - littleTip.x, thumbTip.y - littleTip.y)
+    let distance = hypotl(thumbTip.x - littleTip.x, thumbTip.y - littleTip.y)
 
-    return distance < 0.05
+    return distance < 0.02
   }
 
   func detectVictoryGesture(from observation: VNHumanHandPoseObservation) -> Bool {
@@ -243,9 +251,9 @@ class GestureManager {
     let thumbToMiddleDistance = thumbTip.location.distance(to: middleTip.location)
     let thumbToWristDistance = thumbTip.location.distance(to: wrist.location)
 
-    if thumbToIndexDistance < 0.1 && thumbToMiddleDistance < 0.1 {
+    if thumbToIndexDistance < 0.01 && thumbToMiddleDistance < 0.01 {
       return .closedHand
-    } else if thumbToWristDistance > 0.3 {
+    } else if thumbToWristDistance > 0.03 {
       return .openedHand
     } else if thumbTip.location.y < indexTip.location.y
       && indexTip.location.y < middleTip.location.y
