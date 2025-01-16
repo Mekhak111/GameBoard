@@ -12,11 +12,11 @@ import Vision
 class ShooterViewController: UIViewController, ARSessionDelegate, ARSCNViewDelegate {
   
   private var shootsLabel: UILabel!
-  var arView: ARSCNView!
-  var handPoseRequest: VNDetectHumanHandPoseRequest!
+  private var arView: ARSCNView!
+  private var handPoseRequest: VNDetectHumanHandPoseRequest!
+  private let gestureManager: GestureManager = GestureManager()
   
-  let gestureManager: GestureManager = GestureManager()
-  var shootsCount: Int = 0 {
+  private var shootsCount: Int = 0 {
     didSet {
       DispatchQueue.main.async { [weak self] in
         self?.shootsLabel.text = "Shoots: \( self?.shootsCount ?? 0 )"
@@ -24,16 +24,24 @@ class ShooterViewController: UIViewController, ARSessionDelegate, ARSCNViewDeleg
     }
   }
   
+  private lazy var shooterImageView: UIImageView = {
+    let image = UIImage(systemName: "plus.circle")
+    let imageView = UIImageView(image: image)
+    imageView.translatesAutoresizingMaskIntoConstraints = false
+    return imageView
+  }()
   
   override func viewDidLoad() {
     super.viewDidLoad()
+    
     setupSceneView()
     setupHandPoseDetection()
     addrandomEggs()
-    setupLABEL()
+    setupLabel()
+    setupShooterImageView()
   }
   
-  func setupLABEL() {
+  func setupLabel() {
     shootsLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 100, height: 50))
     shootsLabel.textColor = .white
     shootsLabel.textAlignment = .center
@@ -48,7 +56,7 @@ class ShooterViewController: UIViewController, ARSessionDelegate, ARSCNViewDeleg
       shootsLabel.centerYAnchor.constraint(equalTo: view.topAnchor,constant: 100)
     ])
   }
-
+  
   func setupSceneView() {
     arView = ARSCNView(frame: view.frame)
     arView.autoenablesDefaultLighting = true
@@ -58,6 +66,19 @@ class ShooterViewController: UIViewController, ARSessionDelegate, ARSCNViewDeleg
     arView.delegate = self
     arView.session.delegate = self
     arView.scene.physicsWorld.contactDelegate = self
+  }
+  
+  func setupShooterImageView() {
+    guard let arView else { return }
+    
+    arView.addSubview(shooterImageView)
+    
+    NSLayoutConstraint.activate([
+      shooterImageView.centerXAnchor.constraint(equalTo: arView.centerXAnchor),
+      shooterImageView.centerYAnchor.constraint(equalTo: arView.centerYAnchor),
+      shooterImageView.heightAnchor.constraint(equalToConstant: 40),
+      shooterImageView.widthAnchor.constraint(equalToConstant: 40)
+    ])
   }
   
   func setupHandPoseDetection() {
