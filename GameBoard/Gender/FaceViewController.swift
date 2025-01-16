@@ -12,10 +12,18 @@ import CoreML
 
 class FaceViewController: UIViewController, ARSessionDelegate {
   
-  var arView: ARSCNView!
-  let textNode = SCNNode(geometry: SCNText(string: "", extrusionDepth: 0.1))
+  private var arView: ARSCNView!
+  private let genderModel = GenderClassifier()
   
-  let genderModel = GenderClassifier()
+  private lazy var textLabel: UILabel = {
+    let label = UILabel()
+    label.translatesAutoresizingMaskIntoConstraints = false
+    label.textColor = .black
+    label.font = UIFont.systemFont(ofSize: 32)
+    label.textAlignment = .center
+    label.backgroundColor = .white
+    return label
+  }()
   
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -28,9 +36,13 @@ class FaceViewController: UIViewController, ARSessionDelegate {
   }
   
   func setUpText() {
-    textNode.geometry?.firstMaterial?.diffuse.contents = UIColor.white
-    textNode.scale = SCNVector3(0.005, 0.005, 0.005)
-    arView.scene.rootNode.addChildNode(textNode)
+    arView.addSubview(textLabel)
+    
+    NSLayoutConstraint.activate([
+      textLabel.leftAnchor.constraint(equalTo: arView.leftAnchor),
+      textLabel.rightAnchor.constraint(equalTo: arView.rightAnchor),
+      textLabel.centerYAnchor.constraint(equalTo: arView.topAnchor, constant: 120)
+    ])
   }
   
   func startARSession() {
@@ -71,15 +83,7 @@ class FaceViewController: UIViewController, ARSessionDelegate {
   }
   
   func displayResult(_ text: String) {
-    if let textGeometry = textNode.geometry as? SCNText {
-      textGeometry.string = text
-    }
-    guard let pointOFView = arView.pointOfView else { return }
-    let transform = pointOFView.transform
-    let orientation = SCNVector3(-transform.m31 , -transform.m32, -transform.m33 )
-    let location = SCNVector3(transform.m41 - 0.3, transform.m42, transform.m43)
-    let position = location + orientation
-    textNode.position = position
+    textLabel.text = text
   }
   
 }
